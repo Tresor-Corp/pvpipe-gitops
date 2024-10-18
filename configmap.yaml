@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  {{- range $key, $value := .Values.env }}
+  {{- if not (contains "SECRET" $key) }}
+  {{ $key }}: {{ tpl $value $ | quote }}
+  {{- end }}
+  {{- end }}

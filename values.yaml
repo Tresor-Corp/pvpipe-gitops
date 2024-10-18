@@ -1,0 +1,72 @@
+# Main application
+replicaCount: 1
+image:
+  repository: your-docker-repo/pvpipe-backend
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Ingress
+ingress:
+  enabled: true
+  className: "traefik"
+  hosts:
+    - host: backend.pvpipe.tresor.vn
+      paths:
+        - path: /
+          pathType: Prefix
+
+# Redis
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: alpine
+
+# VNPTSignPDF
+vnptsignpdf:
+  enabled: true
+  image:
+    repository: luuhai48/vnptsignpdf
+    tag: latest
+
+# LocalSignPDF
+localsignpdf:
+  enabled: true
+  image:
+    repository: luuhai48/vnptsignpdf
+    tag: latest
+
+# Environment variables
+env:
+  NODE_ENV: production
+  PORT: "8000"
+  FRONTEND_URL: "http://localhost:3000"
+  JWT_SECRET: "jwt_secret"
+  COOKIE_SECRET: "cookie_secret"
+  ALLOWED_ORIGINS: "http://localhost:3000"
+  DATABASE_URL: "postgresql://myuser:password123@external-postgres:5432/mydb?schema=public"
+  SMTP_CONNECTION_URL: "smtp://email@example.com:pass@smtp-server:1025"
+  MAIL_FROM: "pvpipe <noreply@example.com>"
+  S3_PROVIDER: "minio"
+  S3_ACCESS_KEY_ID: "minio"
+  S3_SECRET_ACCESS_KEY: "minio123"
+  S3_BUCKET_NAME: "mybucket"
+  S3_REGION: "us-east-1"
+  S3_ENDPOINT: "http://external-s3:9000"
+  SENTRY_DSN: ""
+  SENTRY_TRACES_SAMPLE_RATE: "1.0"
+  REDIS_HOST: "{{ .Release.Name }}-redis"
+  REDIS_PORT: "6379"
+  P12_CERTIFICATE_PATH: "/app/certs/certificate.p12"
+  P12_CERTIFICATE_PASSWORD: "sa@123"
+  CONVERTER_SERVICE_URL: "http://converter-service:2004"
+  SMARTCA_BASE_URL: "https://rmgateway.vnptit.vn"
+  SMARTCA_CLIENT_ID: "xxxx-xxxxxxxxxxxxxxxxxx.apps.smartcaapi.com"
+  SMARTCA_CLIENT_SECRET: "xxxxxxxxxxx-xxxxxxxxxxxx"
+  SMARTCA_USER_ID: "xxxxxxxxxxxx"
+  SMARTCA_USER_PASSWORD: "xxxxxxxxxxxx"
+  SMARTCA_TOTP_SECRET: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  LOCAL_SIGN_API: "http://{{ .Release.Name }}-localsignpdf:8000"
+  LOCAL_CERT_PASSWORD: "sa@123"
+  LOCAL_PKCS7_CERT_BASE64: ""
+  VNPT_LOCAL_SIGN_API: "http://{{ .Release.Name }}-vnptsignpdf:8000"

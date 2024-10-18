@@ -1,0 +1,26 @@
+{{- if .Values.localsignpdf.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-localsignpdf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-localsignpdf
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-localsignpdf
+    spec:
+      containers:
+        - name: localsignpdf
+          image: "{{ .Values.localsignpdf.image.repository }}:{{ .Values.localsignpdf.image.tag }}"
+          ports:
+            - containerPort: 8000
+          command:
+            - java
+            - -Xmx256m
+            - -jar
+            - /app/localsign.jar
+{{- end }}

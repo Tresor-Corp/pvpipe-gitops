@@ -1,0 +1,13 @@
+{{- if .Values.localsignpdf.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-localsignpdf
+spec:
+  selector:
+    app: {{ .Release.Name }}-localsignpdf
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+{{- end }}

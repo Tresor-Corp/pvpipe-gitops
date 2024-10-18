@@ -1,0 +1,26 @@
+{{- if .Values.vnptsignpdf.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-vnptsignpdf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-vnptsignpdf
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-vnptsignpdf
+    spec:
+      containers:
+        - name: vnptsignpdf
+          image: "{{ .Values.vnptsignpdf.image.repository }}:{{ .Values.vnptsignpdf.image.tag }}"
+          ports:
+            - containerPort: 8000
+          command:
+            - java
+            - -Xmx256m
+            - -jar
+            - /app/vnptsign.jar
+{{- end }}

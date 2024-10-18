@@ -1,0 +1,13 @@
+{{- if .Values.vnptsignpdf.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-vnptsignpdf
+spec:
+  selector:
+    app: {{ .Release.Name }}-vnptsignpdf
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+{{- end }}
