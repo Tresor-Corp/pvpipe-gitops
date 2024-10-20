@@ -1,7 +1,7 @@
 # Main application
 replicaCount: 1
 image:
-  repository: your-docker-repo/pvpipe-backend
+  repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/pvpipe-backend
   tag: latest
   pullPolicy: Always
 
