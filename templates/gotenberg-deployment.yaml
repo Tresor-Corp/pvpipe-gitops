@@ -1,0 +1,21 @@
+{{- if .Values.gotenberg.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-gotenberg
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-gotenberg
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-gotenberg
+    spec:
+      containers:
+        - name: {{ .Release.Name }}-gotenberg
+          image: "{{ .Values.gotenberg.image.repository }}:{{ .Values.gotenberg.image.tag }}"
+          ports:
+            - containerPort: 3000
+{{- end }}

@@ -39,6 +39,13 @@ localsignpdf:
     repository: luuhai48/vnptsignpdf
     tag: latest
 
+# Gotenberg
+gotenberg:
+  enabled: true
+  image:
+    repository: gotenberg/gotenberg
+    tag: 8
+
 # Environment variables
 env:
   NODE_ENV: production
@@ -70,3 +77,4 @@ env:
   LOCAL_CERT_PASSWORD: "sa@123"
   LOCAL_PKCS7_CERT_BASE64: ""
   VNPT_LOCAL_SIGN_API: "http://{{ .Release.Name }}-vnptsignpdf:8000"
+  GOTENBERG_URL: "http://gotenberg:3000"
