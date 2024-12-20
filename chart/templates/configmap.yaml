@@ -4,7 +4,7 @@ metadata:
   name: {{ .Release.Name }}-configmap
 data:
   {{- range $key, $value := .Values.env }}
-  {{- if not (or (contains "SECRET" $key) (contains "CERT" $key) (contains "PASSWORD" $key)) }}
+  {{- if not (or (contains "SECRET" $key) (contains "CERT" $key) (contains "PASSWORD" $key) (eq "DATABASE_URL" $key)) }}
   {{ $key }}: {{ tpl (toString $value) $ | quote }}
   {{- end }}
   {{- end }}

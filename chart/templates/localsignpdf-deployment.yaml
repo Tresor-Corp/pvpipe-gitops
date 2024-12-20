@@ -23,4 +23,6 @@ spec:
             - -Xmx256m
             - -jar
             - /app/localsign.jar
+          resources:
+            {{- toYaml .Values.postgresBackup.resources | nindent 12 }}
 {{- end }}

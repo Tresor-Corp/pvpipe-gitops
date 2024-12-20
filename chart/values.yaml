@@ -8,7 +8,6 @@ image:
 # Ingress
 ingress:
   enabled: true
-  className: "traefik"
   hosts:
     - host: backend.pvpipe.tresor.vn
       paths:
@@ -31,20 +30,52 @@ vnptsignpdf:
   image:
     repository: luuhai48/vnptsignpdf
     tag: latest
-
+  resources:
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
 # LocalSignPDF
 localsignpdf:
   enabled: true
   image:
     repository: luuhai48/vnptsignpdf
     tag: latest
-
+  resources:
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
 # Gotenberg
 gotenberg:
   enabled: true
   image:
     repository: gotenberg/gotenberg
     tag: 8
+  resources:
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+# Postgres Backup
+postgresBackup:
+  enabled: true
+  image:
+    repository: eeshugerman/postgres-backup-s3
+    tag: "16"
+  resources:
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
 
 # Environment variables
 env:
@@ -63,6 +94,7 @@ env:
   S3_BUCKET_NAME: ""
   S3_REGION: ""
   S3_ENDPOINT: "http://external-s3:9000"
+  BACKUP_S3_PREFIX: ""
   SENTRY_DSN: ""
   SENTRY_TRACES_SAMPLE_RATE: "1.0"
   REDIS_HOST: "{{ .Release.Name }}-redis"
@@ -77,4 +109,4 @@ env:
   LOCAL_CERT_PASSWORD: "sa@123"
   LOCAL_PKCS7_CERT_BASE64: ""
   VNPT_LOCAL_SIGN_API: "http://{{ .Release.Name }}-vnptsignpdf:8000"
-  GOTENBERG_URL: "http://gotenberg:3000"
+  GOTENBERG_URL: "http://{{ .Release.Name }}-gotenberg:3000"

@@ -1,0 +1,40 @@
+{{- define "common.deployment" -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+  annotations:
+    keel.sh/policy: {{ .keelPolicy | default "force" }}
+    keel.sh/trigger: poll
+    keel.sh/pollSchedule: "@every 1m"
+    keel.sh/match-tag: 'true'
+spec:
+  replicas: {{ .replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+    spec:
+      containers:
+        - name: {{ .name }}
+          image: "{{ .image.repository }}:{{ .image.tag }}"
+          imagePullPolicy: {{ .image.pullPolicy }}
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-configmap
+            - secretRef:
+                name: {{ .Release.Name }}-secret
+      imagePullSecrets:
+        - name: aws-registry
+{{- end -}}
+
+---
+{{ include "common.deployment" (dict "name" (printf "%s-backend" .Release.Name) "image" .Values.image "replicaCount" .Values.replicaCount "Release" .Release) }}
+
+---
+{{ include "common.deployment" (dict "name" (printf "%s-frontend" .Release.Name) "image" .Values.frontend "replicaCount" .Values.replicaCount "Release" .Release) }}
