@@ -4,6 +4,10 @@ image:
   repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/pvpipe-backend
   tag: latest
   pullPolicy: Always
+frontend:
+  repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/pvpipe-frontend
+  tag: latest
+  pullPolicy: Always
 
 # Ingress
 ingress:
@@ -13,7 +17,13 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
-
+frontend_ingress:
+  enabled: true
+  hosts:
+    - host: backend.pvpipe.tresor.vn
+      paths:
+        - path: /
+          pathType: Prefix
 # Redis
 redis:
   enabled: true
