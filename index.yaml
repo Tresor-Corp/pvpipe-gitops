@@ -1,0 +1,13 @@
+apiVersion: v1
+entries:
+  pvpipe:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2024-12-20T17:22:39.065140676Z"
+    description: A Helm chart for PVPipe Backend deployment
+    digest: 3ec31ef4f2d3a062e37d616823c1dcd270c88c0e67c55d595c6acaa2c8960068
+    name: pvpipe
+    urls:
+    - https://github.com/Tresor-Corp/pvpipe-gitops/releases/download/pvpipe-0.2.0/pvpipe-0.2.0.tgz
+    version: 0.2.0
+generated: "2024-12-20T17:22:39.065147659Z"
