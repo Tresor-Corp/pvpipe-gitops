@@ -30,7 +30,7 @@ spec:
             - secretRef:
                 name: {{ .Release.Name }}-secret
       imagePullSecrets:
-        - name: aws-registry
+        - name: {{ .image.pullSecrets }}
 {{- end -}}
 
 ---

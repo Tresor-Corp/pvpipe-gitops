@@ -4,11 +4,12 @@ image:
   repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/pvpipe-backend
   tag: latest
   pullPolicy: Always
+  pullSecrets: aws-registry
 frontend:
   repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/pvpipe-frontend
   tag: latest
   pullPolicy: Always
-
+  pullSecrets: aws-registry
 # Ingress
 ingress:
   enabled: true
@@ -20,7 +21,7 @@ ingress:
 frontend_ingress:
   enabled: true
   hosts:
-    - host: backend.pvpipe.tresor.vn
+    - host: frontend.pvpipe.tresor.vn
       paths:
         - path: /
           pathType: Prefix
@@ -32,7 +33,6 @@ redis:
     tag: alpine
   storage:
     size: 500M
-    storageClassName: longhorn
 
 # VNPTSignPDF
 vnptsignpdf:
@@ -86,37 +86,4 @@ postgresBackup:
     requests:
       cpu: "100m"
       memory: "128Mi"
-
 # Environment variables
-env:
-  NODE_ENV: production
-  PORT: "8000"
-  FRONTEND_URL: "http://localhost:3000"
-  JWT_SECRET: "jwt_secret"
-  COOKIE_SECRET: "cookie_secret"
-  ALLOWED_ORIGINS: "http://localhost:3000"
-  DATABASE_URL: "postgresql://myuser:password123@external-postgres:5432/mydb?schema=public"
-  SMTP_CONNECTION_URL: "smtp://email@example.com:pass@smtp-server:1025"
-  MAIL_FROM: "pvpipe <noreply@example.com>"
-  S3_PROVIDER: ""
-  S3_ACCESS_KEY_ID: ""
-  S3_SECRET_ACCESS_KEY: ""
-  S3_BUCKET_NAME: ""
-  S3_REGION: ""
-  S3_ENDPOINT: "http://external-s3:9000"
-  BACKUP_S3_PREFIX: ""
-  SENTRY_DSN: ""
-  SENTRY_TRACES_SAMPLE_RATE: "1.0"
-  REDIS_HOST: "{{ .Release.Name }}-redis"
-  REDIS_PORT: "6379"
-  SMARTCA_BASE_URL: "https://rmgateway.vnptit.vn"
-  SMARTCA_CLIENT_ID: "xxxx-xxxxxxxxxxxxxxxxxx.apps.smartcaapi.com"
-  SMARTCA_CLIENT_SECRET: "xxxxxxxxxxx-xxxxxxxxxxxx"
-  SMARTCA_USER_ID: "xxxxxxxxxxxx"
-  SMARTCA_USER_PASSWORD: "xxxxxxxxxxxx"
-  SMARTCA_TOTP_SECRET: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  LOCAL_SIGN_API: "http://{{ .Release.Name }}-localsignpdf:8000"
-  LOCAL_CERT_PASSWORD: "sa@123"
-  LOCAL_PKCS7_CERT_BASE64: ""
-  VNPT_LOCAL_SIGN_API: "http://{{ .Release.Name }}-vnptsignpdf:8000"
-  GOTENBERG_URL: "http://{{ .Release.Name }}-gotenberg:3000"
