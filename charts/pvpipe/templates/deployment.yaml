@@ -8,6 +8,7 @@ metadata:
     keel.sh/trigger: poll
     keel.sh/pollSchedule: "@every 1m"
     keel.sh/match-tag: 'true'
+    {{ .annotation }}
 spec:
   replicas: {{ .replicaCount }}
   selector:

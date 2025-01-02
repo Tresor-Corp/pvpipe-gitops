@@ -1,15 +1,18 @@
 # Main application
 replicaCount: 1
+
 image:
   repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/pvpipe-backend
   tag: latest
   pullPolicy: Always
   pullSecrets: aws-registry
+  annotations: {}
 frontend:
   repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/pvpipe-frontend
   tag: latest
   pullPolicy: Always
   pullSecrets: aws-registry
+  annotations: {}
 # Ingress
 ingress:
   enabled: true
@@ -18,6 +21,7 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
+  annotations: []
 frontend_ingress:
   enabled: true
   hosts:
@@ -25,6 +29,7 @@ frontend_ingress:
       paths:
         - path: /
           pathType: Prefix
+  annotations: []
 # Redis
 redis:
   enabled: true
