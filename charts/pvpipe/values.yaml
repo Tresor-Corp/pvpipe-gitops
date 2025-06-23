@@ -7,12 +7,7 @@ image:
   pullPolicy: Always
   pullSecrets: aws-registry
   annotations: {}
-frontend:
-  repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/pvpipe-frontend
-  tag: latest
-  pullPolicy: Always
-  pullSecrets: aws-registry
-  annotations: {}
+
 # Ingress
 ingress:
   enabled: true
@@ -22,14 +17,7 @@ ingress:
         - path: /
           pathType: Prefix
   annotations: []
-frontend_ingress:
-  enabled: true
-  hosts:
-    - host: frontend.pvpipe.tresor.vn
-      paths:
-        - path: /
-          pathType: Prefix
-  annotations: []
+
 # Redis
 redis:
   enabled: true
