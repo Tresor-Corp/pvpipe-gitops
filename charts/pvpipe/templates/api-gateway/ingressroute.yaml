@@ -19,9 +19,6 @@ spec:
       services:
         - name: {{ tpl $route.service $ }}
           port: {{ $route.port }}
-          {{- if $route.loadBalancer }}
-          {{- toYaml $route.loadBalancer | nindent 10 }}
-          {{- end }}
       {{- if or $route.middlewares $route.protected }}
       middlewares:
         {{- range $route.middlewares }}

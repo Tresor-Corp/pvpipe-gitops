@@ -151,12 +151,6 @@ traefik:
         - compress
         - strip-backend
         # jwt-auth or jwt-forward-auth will be added automatically if protected: true
-      loadBalancer:
-        sticky:
-          cookie:
-            name: pvpipe-backend
-            secure: true
-            httpOnly: true
     # Public health check endpoint
     health:
       enabled: true
@@ -258,17 +252,20 @@ traefik:
       maxAge: 100
       addVaryHeader: true
     jwt:
-      enabled: false
-      # JWT validation using plugin (requires traefik-jwt-plugin)
-      jwksUrl: ""  # URL to fetch JWKS (for RS256, ES256, etc.)
-      secret: ""  # Secret key for HS256
-      signingMethod: "RS256"  # HS256, RS256, ES256, etc.
+      enabled: true
+      # JWT validation using shared secret (HS256)
+      secret: ""  # REQUIRED: Set your shared secret or use existingSecret
+      existingSecret: ""  # Name of existing K8s secret containing JWT secret
+      existingSecretKey: "jwt-secret"  # Key in the secret containing the JWT secret
+      signingMethod: "HS256"  # Using shared secret method
       headerName: "Authorization"  # Header containing the token
       tokenQueryParam: ""  # Query parameter containing the token (optional)
       claims: ""  # Required claims in format "claim1=value1,claim2=value2"
       forwardHeaders:  # Headers to forward after successful validation
         X-User-Id: "sub"
         X-User-Email: "email"
+        X-User-Name: "name"
+        X-User-Roles: "roles"
     jwtForwardAuth:
       enabled: false
       # Forward authentication to external service

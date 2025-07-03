@@ -15,7 +15,9 @@ This chart supports two methods of JWT validation:
 
 ## Configuration Examples:
 
-### Method 1: JWT Plugin (Direct Validation)
+### Method 1: JWT Plugin (Shared Secret - Default)
+
+The chart is configured to use HS256 (shared secret) by default.
 
 Enable in values.yaml:
 
@@ -24,23 +26,35 @@ traefik:
   middleware:
     jwt:
       enabled: true
-      jwksUrl: "https://your-auth-provider.com/.well-known/jwks.json"
-      signingMethod: "RS256"
+      secret: "your-shared-secret-min-32-chars"  # REQUIRED
+      signingMethod: "HS256"
       headerName: "Authorization"
       forwardHeaders:
         X-User-Id: "sub"
         X-User-Email: "email"
         X-User-Name: "name"
+        X-User-Roles: "roles"
 ```
 
-For HS256 (shared secret):
+Using existing Kubernetes secret:
 ```yaml
 traefik:
   middleware:
     jwt:
       enabled: true
-      secret: "your-shared-secret"
+      existingSecret: "my-jwt-secret"  # Name of K8s secret
+      existingSecretKey: "jwt-secret"  # Key in the secret
       signingMethod: "HS256"
+```
+
+For RS256 (public key):
+```yaml
+traefik:
+  middleware:
+    jwt:
+      enabled: true
+      jwksUrl: "https://your-auth-provider.com/.well-known/jwks.json"
+      signingMethod: "RS256"
 ```
 
 ### Method 2: Forward Authentication

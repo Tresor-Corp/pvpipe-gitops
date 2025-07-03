@@ -19,12 +19,6 @@ To add a new microservice:
             - retry
             - compress
             - strip-myservice
-          loadBalancer:
-            sticky:
-              cookie:
-                name: myservice-session
-                secure: true
-                httpOnly: true
 
 2. Deploy your microservice with the service name matching the "service" field above
 
@@ -34,7 +28,7 @@ Notes:
 - stripPrefix: true will remove the pathPrefix before forwarding to your service
 - The middleware "strip-myservice" is automatically created when stripPrefix is true
 - You can customize which middlewares to apply per service
-- LoadBalancer configuration is optional for sticky sessions
+- All microservices should be stateless for horizontal scaling
 
 Example microservice deployment:
 

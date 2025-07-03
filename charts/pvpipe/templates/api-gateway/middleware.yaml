@@ -151,7 +151,12 @@ spec:
       {{- if .Values.traefik.middleware.jwt.jwksUrl }}
       jwksUrl: {{ .Values.traefik.middleware.jwt.jwksUrl }}
       {{- end }}
-      {{- if .Values.traefik.middleware.jwt.secret }}
+      {{- if .Values.traefik.middleware.jwt.existingSecret }}
+      secretFrom:
+        secretKeyRef:
+          name: {{ .Values.traefik.middleware.jwt.existingSecret }}
+          key: {{ .Values.traefik.middleware.jwt.existingSecretKey | default "jwt-secret" }}
+      {{- else if .Values.traefik.middleware.jwt.secret }}
       secret: {{ .Values.traefik.middleware.jwt.secret }}
       {{- end }}
       {{- if .Values.traefik.middleware.jwt.signingMethod }}
