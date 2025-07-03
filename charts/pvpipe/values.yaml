@@ -1,4 +1,7 @@
 # Main application
+backend:
+  enabled: true
+
 replicaCount: 1
 
 image:
@@ -7,16 +10,6 @@ image:
   pullPolicy: Always
   pullSecrets: aws-registry
   annotations: {}
-
-# Ingress
-ingress:
-  enabled: true
-  hosts:
-    - host: backend.pvpipe.tresor.vn
-      paths:
-        - path: /
-          pathType: Prefix
-  annotations: []
 
 # Redis
 redis:
@@ -79,4 +72,216 @@ postgresBackup:
     requests:
       cpu: "100m"
       memory: "128Mi"
+# Meilisearch
+meilisearch:
+  enabled: true
+  image:
+    repository: getmeili/meilisearch
+    tag: v1.11.0
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 7700
+  environment: production
+  masterKey: ""  # Set a master key for production use
+  dbPath: /meili_data
+  persistence:
+    enabled: true
+    size: 10Gi
+    mountPath: /meili_data
+    storageClass: ""  # Leave empty to use default storage class
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+# Traefik API Gateway
+traefik:
+  enabled: true
+  # Traefik chart values
+  service:
+    type: LoadBalancer
+  ports:
+    websecure:
+      port: 8443
+      expose:
+        default: true
+      exposedPort: 443
+      protocol: TCP
+      tls:
+        enabled: true
+  ingressRoute:
+    dashboard:
+      enabled: true
+  providers:
+    kubernetesCRD:
+      enabled: true
+      allowCrossNamespace: false
+    kubernetesIngress:
+      enabled: false
+  logs:
+    general:
+      level: INFO
+    access:
+      enabled: true
+  metrics:
+    prometheus:
+      enabled: true
+  # API Gateway configuration
+  apiGateway:
+    host: api.tresor.vn
+    tls:
+      certResolver: letsencrypt
+  # Microservices routing configuration
+  routes:
+    # Backend service route (protected)
+    backend:
+      enabled: true
+      pathPrefix: /api/v1/backend
+      stripPrefix: true
+      service: "{{ .Release.Name }}-backend"
+      port: 8000
+      protected: true  # Requires JWT authentication
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - strip-backend
+        # jwt-auth or jwt-forward-auth will be added automatically if protected: true
+      loadBalancer:
+        sticky:
+          cookie:
+            name: pvpipe-backend
+            secure: true
+            httpOnly: true
+    # Public health check endpoint
+    health:
+      enabled: true
+      pathPrefix: /health
+      stripPrefix: false
+      service: "{{ .Release.Name }}-backend"
+      port: 8000
+      protected: false  # Public endpoint
+      middlewares:
+        - headers
+    # Example microservice routes (disabled by default)
+    docs:
+      enabled: false
+      pathPrefix: /api/docs
+      stripPrefix: true
+      service: "{{ .Release.Name }}-docs"
+      port: 3000
+      protected: false  # Public documentation
+      middlewares:
+        - rate-limit
+        - headers
+        - compress
+    users:
+      enabled: false
+      pathPrefix: /api/v1/users
+      stripPrefix: true
+      service: "{{ .Release.Name }}-users"
+      port: 8080
+      protected: true  # Requires JWT authentication
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+    auth:
+      enabled: false
+      pathPrefix: /api/auth
+      stripPrefix: true
+      service: "{{ .Release.Name }}-auth"
+      port: 8080
+      protected: false  # Auth endpoints are public (login, register, etc.)
+      middlewares:
+        - rate-limit
+        - headers
+        - compress
+  dashboard:
+    enabled: true
+    host: traefik.pvpipe.tresor.vn
+    middlewares:
+      - basic-auth
+    tls:
+      certResolver: letsencrypt
+  # Middleware configurations
+  middleware:
+    rateLimit:
+      enabled: true
+      average: 100
+      period: 1m
+      burst: 50
+    headers:
+      enabled: true
+      stsSeconds: 31536000
+      stsIncludeSubdomains: true
+      stsPreload: true
+      forceSTSHeader: true
+      contentTypeNosniff: true
+      browserXssFilter: true
+      customRequestHeaders:
+        X-Forwarded-Proto: https
+      customResponseHeaders:
+        X-Content-Type-Options: nosniff
+        X-Frame-Options: DENY
+        X-XSS-Protection: 1; mode=block
+    retry:
+      enabled: true
+      attempts: 3
+      initialInterval: 100ms
+    circuitBreaker:
+      enabled: true
+      expression: "NetworkErrorRatio() > 0.30 || ResponseCodeRatio(500, 600, 0, 600) > 0.50"
+    compress:
+      enabled: true
+    basicAuth:
+      enabled: false
+      secret: traefik-basic-auth
+    cors:
+      enabled: false
+      allowMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+      allowHeaders:
+        - Content-Type
+        - Authorization
+      allowOrigins:
+        - "*"
+      maxAge: 100
+      addVaryHeader: true
+    jwt:
+      enabled: false
+      # JWT validation using plugin (requires traefik-jwt-plugin)
+      jwksUrl: ""  # URL to fetch JWKS (for RS256, ES256, etc.)
+      secret: ""  # Secret key for HS256
+      signingMethod: "RS256"  # HS256, RS256, ES256, etc.
+      headerName: "Authorization"  # Header containing the token
+      tokenQueryParam: ""  # Query parameter containing the token (optional)
+      claims: ""  # Required claims in format "claim1=value1,claim2=value2"
+      forwardHeaders:  # Headers to forward after successful validation
+        X-User-Id: "sub"
+        X-User-Email: "email"
+    jwtForwardAuth:
+      enabled: false
+      # Forward authentication to external service
+      authEndpoint: "http://auth-service/verify"
+      trustForwardHeader: true
+      authResponseHeaders:
+        - X-User-Id
+        - X-User-Email
+        - X-User-Roles
+      authResponseHeadersRegex: ""
+      authRequestHeaders:
+        - Authorization
+        - X-Original-URL
+      tls:
+        insecureSkipVerify: false
 # Environment variables

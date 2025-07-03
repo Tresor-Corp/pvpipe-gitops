@@ -1,0 +1,12 @@
+{{- if .Values.traefik.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-traefik-values
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik
+data:
+  values.yaml: |
+    {{- toYaml .Values.traefik | nindent 4 }}
+{{- end }}

@@ -1,0 +1,82 @@
+{{- if .Values.traefik.enabled }}
+---
+# Main API Gateway IngressRoute
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-api-gateway
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api-gateway
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    {{- range $name, $route := .Values.traefik.routes }}
+    {{- if $route.enabled }}
+    - match: Host(`{{ $.Values.traefik.apiGateway.host }}`) && PathPrefix(`{{ $route.pathPrefix }}`)
+      kind: Rule
+      services:
+        - name: {{ tpl $route.service $ }}
+          port: {{ $route.port }}
+          {{- if $route.loadBalancer }}
+          {{- toYaml $route.loadBalancer | nindent 10 }}
+          {{- end }}
+      {{- if or $route.middlewares $route.protected }}
+      middlewares:
+        {{- range $route.middlewares }}
+        - name: {{ include "pvpipe.fullname" $ }}-{{ . }}
+        {{- end }}
+        {{- if $route.protected }}
+        {{- if $.Values.traefik.middleware.jwt.enabled }}
+        - name: {{ include "pvpipe.fullname" $ }}-jwt-auth
+        {{- else if $.Values.traefik.middleware.jwtForwardAuth.enabled }}
+        - name: {{ include "pvpipe.fullname" $ }}-jwt-forward-auth
+        {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+  {{- if .Values.traefik.apiGateway.tls }}
+  tls:
+    {{- if .Values.traefik.apiGateway.tls.secretName }}
+    secretName: {{ .Values.traefik.apiGateway.tls.secretName }}
+    {{- else }}
+    certResolver: {{ .Values.traefik.apiGateway.tls.certResolver | default "letsencrypt" }}
+    {{- end }}
+  {{- end }}
+---
+{{- if .Values.traefik.dashboard.enabled }}
+# Traefik Dashboard IngressRoute
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-traefik-dashboard
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`{{ .Values.traefik.dashboard.host }}`)
+      kind: Rule
+      services:
+        - name: api@internal
+          kind: TraefikService
+      {{- if .Values.traefik.dashboard.middlewares }}
+      middlewares:
+        {{- range .Values.traefik.dashboard.middlewares }}
+        - name: {{ include "pvpipe.fullname" $ }}-{{ . }}
+        {{- end }}
+      {{- end }}
+  {{- if .Values.traefik.dashboard.tls }}
+  tls:
+    {{- if .Values.traefik.dashboard.tls.secretName }}
+    secretName: {{ .Values.traefik.dashboard.tls.secretName }}
+    {{- else }}
+    certResolver: {{ .Values.traefik.dashboard.tls.certResolver | default "letsencrypt" }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,19 @@
+{{- if .Values.meilisearch.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-meilisearch
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: meilisearch
+spec:
+  type: {{ .Values.meilisearch.service.type | default "ClusterIP" }}
+  ports:
+    - port: {{ .Values.meilisearch.service.port | default 7700 }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "pvpipe.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: meilisearch
+{{- end }}

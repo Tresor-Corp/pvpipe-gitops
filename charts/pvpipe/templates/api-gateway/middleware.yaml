@@ -1,0 +1,206 @@
+{{- if .Values.traefik.enabled }}
+{{- range $name, $route := .Values.traefik.routes }}
+{{- if and $route.enabled $route.stripPrefix }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "pvpipe.fullname" $ }}-strip-{{ $name }}
+  labels:
+    {{- include "pvpipe.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: traefik-middleware
+spec:
+  stripPrefix:
+    prefixes:
+      - {{ $route.pathPrefix }}
+{{- end }}
+{{- end }}
+
+{{- if .Values.traefik.middleware.rateLimit.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-rate-limit
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik-middleware
+spec:
+  rateLimit:
+    average: {{ .Values.traefik.middleware.rateLimit.average | default 100 }}
+    period: {{ .Values.traefik.middleware.rateLimit.period | default "1m" }}
+    burst: {{ .Values.traefik.middleware.rateLimit.burst | default 50 }}
+{{- end }}
+
+{{- if .Values.traefik.middleware.headers.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-headers
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik-middleware
+spec:
+  headers:
+    {{- if .Values.traefik.middleware.headers.customRequestHeaders }}
+    customRequestHeaders:
+      {{- toYaml .Values.traefik.middleware.headers.customRequestHeaders | nindent 6 }}
+    {{- end }}
+    {{- if .Values.traefik.middleware.headers.customResponseHeaders }}
+    customResponseHeaders:
+      {{- toYaml .Values.traefik.middleware.headers.customResponseHeaders | nindent 6 }}
+    {{- end }}
+    stsSeconds: {{ .Values.traefik.middleware.headers.stsSeconds | default 31536000 }}
+    stsIncludeSubdomains: {{ .Values.traefik.middleware.headers.stsIncludeSubdomains | default true }}
+    stsPreload: {{ .Values.traefik.middleware.headers.stsPreload | default true }}
+    forceSTSHeader: {{ .Values.traefik.middleware.headers.forceSTSHeader | default true }}
+    contentTypeNosniff: {{ .Values.traefik.middleware.headers.contentTypeNosniff | default true }}
+    browserXssFilter: {{ .Values.traefik.middleware.headers.browserXssFilter | default true }}
+{{- end }}
+
+{{- if .Values.traefik.middleware.retry.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-retry
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik-middleware
+spec:
+  retry:
+    attempts: {{ .Values.traefik.middleware.retry.attempts | default 3 }}
+    initialInterval: {{ .Values.traefik.middleware.retry.initialInterval | default "100ms" }}
+{{- end }}
+
+{{- if .Values.traefik.middleware.circuitBreaker.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-circuit-breaker
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik-middleware
+spec:
+  circuitBreaker:
+    expression: {{ .Values.traefik.middleware.circuitBreaker.expression | default "NetworkErrorRatio() > 0.30 || ResponseCodeRatio(500, 600, 0, 600) > 0.50" }}
+{{- end }}
+
+{{- if .Values.traefik.middleware.compress.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-compress
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik-middleware
+spec:
+  compress: {}
+{{- end }}
+
+{{- if .Values.traefik.middleware.basicAuth.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-basic-auth
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik-middleware
+spec:
+  basicAuth:
+    secret: {{ .Values.traefik.middleware.basicAuth.secret }}
+{{- end }}
+
+{{- if .Values.traefik.middleware.cors.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-cors
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik-middleware
+spec:
+  headers:
+    accessControlAllowMethods:
+      {{- toYaml .Values.traefik.middleware.cors.allowMethods | nindent 6 }}
+    accessControlAllowHeaders:
+      {{- toYaml .Values.traefik.middleware.cors.allowHeaders | nindent 6 }}
+    accessControlAllowOriginList:
+      {{- toYaml .Values.traefik.middleware.cors.allowOrigins | nindent 6 }}
+    accessControlMaxAge: {{ .Values.traefik.middleware.cors.maxAge | default 100 }}
+    addVaryHeader: {{ .Values.traefik.middleware.cors.addVaryHeader | default true }}
+{{- end }}
+
+{{- if .Values.traefik.middleware.jwt.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-jwt-auth
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik-middleware
+spec:
+  plugin:
+    jwt:
+      {{- if .Values.traefik.middleware.jwt.jwksUrl }}
+      jwksUrl: {{ .Values.traefik.middleware.jwt.jwksUrl }}
+      {{- end }}
+      {{- if .Values.traefik.middleware.jwt.secret }}
+      secret: {{ .Values.traefik.middleware.jwt.secret }}
+      {{- end }}
+      {{- if .Values.traefik.middleware.jwt.signingMethod }}
+      signingMethod: {{ .Values.traefik.middleware.jwt.signingMethod }}
+      {{- end }}
+      {{- if .Values.traefik.middleware.jwt.headerName }}
+      headerName: {{ .Values.traefik.middleware.jwt.headerName }}
+      {{- end }}
+      {{- if .Values.traefik.middleware.jwt.tokenQueryParam }}
+      tokenQueryParam: {{ .Values.traefik.middleware.jwt.tokenQueryParam }}
+      {{- end }}
+      {{- if .Values.traefik.middleware.jwt.claims }}
+      claims: {{ .Values.traefik.middleware.jwt.claims }}
+      {{- end }}
+      {{- if .Values.traefik.middleware.jwt.forwardHeaders }}
+      forwardHeaders:
+        {{- range $key, $value := .Values.traefik.middleware.jwt.forwardHeaders }}
+        {{ $key }}: {{ $value }}
+        {{- end }}
+      {{- end }}
+{{- end }}
+
+{{- if .Values.traefik.middleware.jwtForwardAuth.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-jwt-forward-auth
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik-middleware
+spec:
+  forwardAuth:
+    address: {{ .Values.traefik.middleware.jwtForwardAuth.authEndpoint }}
+    {{- if .Values.traefik.middleware.jwtForwardAuth.trustForwardHeader }}
+    trustForwardHeader: {{ .Values.traefik.middleware.jwtForwardAuth.trustForwardHeader }}
+    {{- end }}
+    {{- if .Values.traefik.middleware.jwtForwardAuth.authResponseHeaders }}
+    authResponseHeaders:
+      {{- toYaml .Values.traefik.middleware.jwtForwardAuth.authResponseHeaders | nindent 6 }}
+    {{- end }}
+    {{- if .Values.traefik.middleware.jwtForwardAuth.authResponseHeadersRegex }}
+    authResponseHeadersRegex: {{ .Values.traefik.middleware.jwtForwardAuth.authResponseHeadersRegex }}
+    {{- end }}
+    {{- if .Values.traefik.middleware.jwtForwardAuth.authRequestHeaders }}
+    authRequestHeaders:
+      {{- toYaml .Values.traefik.middleware.jwtForwardAuth.authRequestHeaders | nindent 6 }}
+    {{- end }}
+    tls:
+      insecureSkipVerify: {{ .Values.traefik.middleware.jwtForwardAuth.tls.insecureSkipVerify | default false }}
+{{- end }}
+{{- end }}

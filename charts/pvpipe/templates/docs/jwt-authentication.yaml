@@ -1,0 +1,138 @@
+{{- /*
+JWT Authentication Setup Guide
+
+This chart supports two methods of JWT validation:
+
+1. JWT Plugin Method (Recommended for simple use cases)
+   - Validates JWT tokens directly in Traefik
+   - Supports JWKS URL for key rotation
+   - Can forward user claims as headers
+
+2. Forward Auth Method (Recommended for complex use cases)
+   - Delegates authentication to an external service
+   - More flexible for custom authentication logic
+   - Can integrate with existing auth services
+
+## Configuration Examples:
+
+### Method 1: JWT Plugin (Direct Validation)
+
+Enable in values.yaml:
+
+```yaml
+traefik:
+  middleware:
+    jwt:
+      enabled: true
+      jwksUrl: "https://your-auth-provider.com/.well-known/jwks.json"
+      signingMethod: "RS256"
+      headerName: "Authorization"
+      forwardHeaders:
+        X-User-Id: "sub"
+        X-User-Email: "email"
+        X-User-Name: "name"
+```
+
+For HS256 (shared secret):
+```yaml
+traefik:
+  middleware:
+    jwt:
+      enabled: true
+      secret: "your-shared-secret"
+      signingMethod: "HS256"
+```
+
+### Method 2: Forward Authentication
+
+Enable in values.yaml:
+
+```yaml
+traefik:
+  middleware:
+    jwtForwardAuth:
+      enabled: true
+      authEndpoint: "http://auth-service/verify"
+      authResponseHeaders:
+        - X-User-Id
+        - X-User-Email
+        - X-User-Roles
+```
+
+## Protecting Routes:
+
+Set `protected: true` on any route to require JWT authentication:
+
+```yaml
+traefik:
+  routes:
+    myservice:
+      enabled: true
+      pathPrefix: /api/v1/myservice
+      protected: true  # This route requires valid JWT
+      service: "{{ .Release.Name }}-myservice"
+      port: 8080
+```
+
+## Public vs Protected Endpoints:
+
+- Public endpoints (protected: false):
+  - /health - Health checks
+  - /api/auth/login - Login endpoint
+  - /api/docs - Public documentation
+
+- Protected endpoints (protected: true):
+  - /api/v1/backend/* - Backend APIs
+  - /api/v1/users/* - User management
+  - /api/v1/admin/* - Admin APIs
+
+## Testing JWT Authentication:
+
+1. Get a token from your auth service:
+   ```bash
+   curl -X POST https://api.tresor.vn/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"username": "user", "password": "pass"}'
+   ```
+
+2. Use the token to access protected endpoints:
+   ```bash
+   curl https://api.tresor.vn/api/v1/backend/data \
+     -H "Authorization: Bearer YOUR_JWT_TOKEN"
+   ```
+
+3. Verify claims are forwarded (if configured):
+   ```bash
+   # Your service will receive headers like:
+   # X-User-Id: 123
+   # X-User-Email: user@example.com
+   ```
+
+## Troubleshooting:
+
+1. Enable debug logging in Traefik:
+   ```yaml
+   traefik:
+     logs:
+       general:
+         level: DEBUG
+   ```
+
+2. Check middleware is created:
+   ```bash
+   kubectl get middleware -n your-namespace
+   ```
+
+3. Verify IngressRoute has middleware attached:
+   ```bash
+   kubectl describe ingressroute your-api-gateway -n your-namespace
+   ```
+
+## Important Notes:
+
+- JWT Plugin requires traefik-jwt-plugin to be installed
+- Forward Auth method works with any authentication service
+- Always use HTTPS in production
+- Rotate secrets regularly
+- Consider token expiration times
+*/ -}}

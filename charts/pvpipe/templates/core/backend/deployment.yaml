@@ -35,4 +35,6 @@ spec:
 {{- end -}}
 
 ---
+{{- if .Values.backend.enabled }}
 {{ include "common.deployment" (dict "name" (printf "%s-backend" .Release.Name) "image" .Values.image "replicaCount" .Values.replicaCount "Release" .Release) }}
+{{- end }}
