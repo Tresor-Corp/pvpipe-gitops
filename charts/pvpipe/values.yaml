@@ -141,31 +141,19 @@ traefik:
     tls: []
   # Microservices routing configuration
   routes:
-    # Backend service route (protected)
-    backend:
+    # Root catch-all route
+    root:
       enabled: true
-      pathPrefix: /api/v1/backend
-      stripPrefix: true
+      pathPrefix: /
+      stripPrefix: false
       service: "{{ .Release.Name }}-backend"
       port: 8000
-      protected: true  # Requires JWT authentication
+      protected: false
       middlewares:
         - rate-limit
         - headers
         - retry
         - compress
-        - strip-backend
-        # jwt-auth or jwt-forward-auth will be added automatically if protected: true
-    # Public health check endpoint
-    health:
-      enabled: true
-      pathPrefix: /health
-      stripPrefix: false
-      service: "{{ .Release.Name }}-backend"
-      port: 8000
-      protected: false  # Public endpoint
-      middlewares:
-        - headers
     # Example microservice routes (disabled by default)
     docs:
       enabled: false
@@ -236,19 +224,21 @@ traefik:
     basicAuth:
       enabled: false
     cors:
-      enabled: false
+      enabled: true
       allowMethods:
         - GET
         - POST
         - PUT
         - DELETE
         - OPTIONS
+        - PATCH
       allowHeaders:
         - Content-Type
         - Authorization
+        - X-Requested-With
       allowOrigins:
         - "*"
-      maxAge: 100
+      maxAge: 3600
       addVaryHeader: true
     jwtForwardAuth:
       enabled: false
