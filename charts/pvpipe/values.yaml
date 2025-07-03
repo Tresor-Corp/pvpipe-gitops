@@ -103,12 +103,26 @@ traefik:
   # Traefik chart values
   service:
     type: ClusterIP
+    spec:
+      ports:
+        - name: web
+          port: 80
+          targetPort: web
+        - name: traefik
+          port: 9000
+          targetPort: traefik
   ports:
     web:
       port: 8000
       expose:
         default: true
       exposedPort: 80
+      protocol: TCP
+    traefik:
+      port: 9000
+      expose:
+        default: false  # Internal use only
+      exposedPort: 9000
       protocol: TCP
   ingressRoute:
     dashboard:
@@ -117,7 +131,8 @@ traefik:
   additionalArguments:
     - "--providers.kubernetescrd.namespaces=$(POD_NAMESPACE)"
     - "--providers.kubernetescrd.allowCrossNamespace=false"
-    - "--api.insecure=false"  # Disable API to prevent path conflicts
+    - "--api.dashboard=true"
+    - "--api.insecure=true"  # API is now safe on separate port 9000
   rbac:
     enabled: true
     namespaced: true
