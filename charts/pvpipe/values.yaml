@@ -103,14 +103,6 @@ traefik:
   # Traefik chart values
   service:
     type: ClusterIP
-    spec:
-      ports:
-        - name: web
-          port: 80
-          targetPort: web
-        - name: traefik
-          port: 9000
-          targetPort: traefik
   ports:
     web:
       port: 8000
@@ -121,7 +113,7 @@ traefik:
     traefik:
       port: 9000
       expose:
-        default: false  # Internal use only
+        default: true  # Must be true to create the service port
       exposedPort: 9000
       protocol: TCP
   ingressRoute:
