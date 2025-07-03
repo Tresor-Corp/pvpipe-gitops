@@ -1,0 +1,3 @@
+# Ignore subchart tarballs but keep Chart.lock
+charts/**/charts/
+*.tgz
