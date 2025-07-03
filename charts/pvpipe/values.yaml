@@ -130,6 +130,15 @@ traefik:
   # API Gateway configuration
   apiGateway:
     host: api.tresor.vn
+  # Ingress configuration for API Gateway
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: cluster-issuer-tresor.vn
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      external-dns.alpha.kubernetes.io/hostname: "ingress.tresor.vn"
+    tls: []
   # Microservices routing configuration
   routes:
     # Backend service route (protected)
