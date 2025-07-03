@@ -116,12 +116,16 @@ traefik:
   rbac:
     enabled: true
     namespaced: true
+  # Force namespace isolation
+  deployment:
+    additionalArguments:
+      - "--providers.kubernetescrd.namespaces={{ .Release.Namespace }}"
+      - "--providers.kubernetescrd.allowCrossNamespace=false"
   providers:
     kubernetesCRD:
       enabled: true
       allowCrossNamespace: false
-      namespaces: 
-        - "{{ .Release.Namespace }}"
+      namespaces: []  # Empty array forces current namespace only
     kubernetesIngress:
       enabled: false
   logs:
