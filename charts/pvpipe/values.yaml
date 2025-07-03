@@ -104,14 +104,12 @@ traefik:
   service:
     type: LoadBalancer
   ports:
-    websecure:
-      port: 8443
+    web:
+      port: 8000
       expose:
         default: true
-      exposedPort: 443
+      exposedPort: 80
       protocol: TCP
-      tls:
-        enabled: true
   ingressRoute:
     dashboard:
       enabled: true
@@ -132,8 +130,6 @@ traefik:
   # API Gateway configuration
   apiGateway:
     host: api.tresor.vn
-    tls:
-      certResolver: letsencrypt
   # Microservices routing configuration
   routes:
     # Backend service route (protected)
@@ -201,8 +197,6 @@ traefik:
     host: traefik.pvpipe.tresor.vn
     middlewares:
       - basic-auth
-    tls:
-      certResolver: letsencrypt
   # Middleware configurations
   middleware:
     rateLimit:
@@ -234,8 +228,9 @@ traefik:
     compress:
       enabled: true
     basicAuth:
-      enabled: false
-      secret: traefik-basic-auth
+      enabled: true
+      existingSecret: ""  # Use existing secret name or leave empty to generate
+      users: ""  # htpasswd format: username:encrypted-password
     cors:
       enabled: false
       allowMethods:
@@ -251,25 +246,10 @@ traefik:
         - "*"
       maxAge: 100
       addVaryHeader: true
-    jwt:
-      enabled: true
-      # JWT validation using shared secret (HS256)
-      secret: ""  # REQUIRED: Set your shared secret or use existingSecret
-      existingSecret: ""  # Name of existing K8s secret containing JWT secret
-      existingSecretKey: "jwt-secret"  # Key in the secret containing the JWT secret
-      signingMethod: "HS256"  # Using shared secret method
-      headerName: "Authorization"  # Header containing the token
-      tokenQueryParam: ""  # Query parameter containing the token (optional)
-      claims: ""  # Required claims in format "claim1=value1,claim2=value2"
-      forwardHeaders:  # Headers to forward after successful validation
-        X-User-Id: "sub"
-        X-User-Email: "email"
-        X-User-Name: "name"
-        X-User-Roles: "roles"
     jwtForwardAuth:
-      enabled: false
+      enabled: true
       # Forward authentication to external service
-      authEndpoint: "http://auth-service/verify"
+      authEndpoint: "http://auth-service.default.svc.cluster.local/verify"
       trustForwardHeader: true
       authResponseHeaders:
         - X-User-Id

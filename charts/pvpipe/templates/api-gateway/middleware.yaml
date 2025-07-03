@@ -112,7 +112,7 @@ metadata:
     app.kubernetes.io/component: traefik-middleware
 spec:
   basicAuth:
-    secret: {{ .Values.traefik.middleware.basicAuth.secret }}
+    secret: {{ .Values.traefik.middleware.basicAuth.existingSecret | default (printf "%s-basic-auth" (include "pvpipe.fullname" .)) }}
 {{- end }}
 
 {{- if .Values.traefik.middleware.cors.enabled }}
@@ -136,48 +136,6 @@ spec:
     addVaryHeader: {{ .Values.traefik.middleware.cors.addVaryHeader | default true }}
 {{- end }}
 
-{{- if .Values.traefik.middleware.jwt.enabled }}
----
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: {{ include "pvpipe.fullname" . }}-jwt-auth
-  labels:
-    {{- include "pvpipe.labels" . | nindent 4 }}
-    app.kubernetes.io/component: traefik-middleware
-spec:
-  plugin:
-    jwt:
-      {{- if .Values.traefik.middleware.jwt.jwksUrl }}
-      jwksUrl: {{ .Values.traefik.middleware.jwt.jwksUrl }}
-      {{- end }}
-      {{- if .Values.traefik.middleware.jwt.existingSecret }}
-      secretFrom:
-        secretKeyRef:
-          name: {{ .Values.traefik.middleware.jwt.existingSecret }}
-          key: {{ .Values.traefik.middleware.jwt.existingSecretKey | default "jwt-secret" }}
-      {{- else if .Values.traefik.middleware.jwt.secret }}
-      secret: {{ .Values.traefik.middleware.jwt.secret }}
-      {{- end }}
-      {{- if .Values.traefik.middleware.jwt.signingMethod }}
-      signingMethod: {{ .Values.traefik.middleware.jwt.signingMethod }}
-      {{- end }}
-      {{- if .Values.traefik.middleware.jwt.headerName }}
-      headerName: {{ .Values.traefik.middleware.jwt.headerName }}
-      {{- end }}
-      {{- if .Values.traefik.middleware.jwt.tokenQueryParam }}
-      tokenQueryParam: {{ .Values.traefik.middleware.jwt.tokenQueryParam }}
-      {{- end }}
-      {{- if .Values.traefik.middleware.jwt.claims }}
-      claims: {{ .Values.traefik.middleware.jwt.claims }}
-      {{- end }}
-      {{- if .Values.traefik.middleware.jwt.forwardHeaders }}
-      forwardHeaders:
-        {{- range $key, $value := .Values.traefik.middleware.jwt.forwardHeaders }}
-        {{ $key }}: {{ $value }}
-        {{- end }}
-      {{- end }}
-{{- end }}
 
 {{- if .Values.traefik.middleware.jwtForwardAuth.enabled }}
 ---

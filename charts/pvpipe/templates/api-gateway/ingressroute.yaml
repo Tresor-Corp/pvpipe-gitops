@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/component: api-gateway
 spec:
   entryPoints:
-    - websecure
+    - web
   routes:
     {{- range $name, $route := .Values.traefik.routes }}
     {{- if $route.enabled }}
@@ -24,24 +24,12 @@ spec:
         {{- range $route.middlewares }}
         - name: {{ include "pvpipe.fullname" $ }}-{{ . }}
         {{- end }}
-        {{- if $route.protected }}
-        {{- if $.Values.traefik.middleware.jwt.enabled }}
-        - name: {{ include "pvpipe.fullname" $ }}-jwt-auth
-        {{- else if $.Values.traefik.middleware.jwtForwardAuth.enabled }}
+        {{- if and $route.protected $.Values.traefik.middleware.jwtForwardAuth.enabled }}
         - name: {{ include "pvpipe.fullname" $ }}-jwt-forward-auth
-        {{- end }}
         {{- end }}
       {{- end }}
     {{- end }}
     {{- end }}
-  {{- if .Values.traefik.apiGateway.tls }}
-  tls:
-    {{- if .Values.traefik.apiGateway.tls.secretName }}
-    secretName: {{ .Values.traefik.apiGateway.tls.secretName }}
-    {{- else }}
-    certResolver: {{ .Values.traefik.apiGateway.tls.certResolver | default "letsencrypt" }}
-    {{- end }}
-  {{- end }}
 ---
 {{- if .Values.traefik.dashboard.enabled }}
 # Traefik Dashboard IngressRoute
@@ -54,7 +42,7 @@ metadata:
     app.kubernetes.io/component: traefik
 spec:
   entryPoints:
-    - websecure
+    - web
   routes:
     - match: Host(`{{ .Values.traefik.dashboard.host }}`)
       kind: Rule
@@ -67,13 +55,5 @@ spec:
         - name: {{ include "pvpipe.fullname" $ }}-{{ . }}
         {{- end }}
       {{- end }}
-  {{- if .Values.traefik.dashboard.tls }}
-  tls:
-    {{- if .Values.traefik.dashboard.tls.secretName }}
-    secretName: {{ .Values.traefik.dashboard.tls.secretName }}
-    {{- else }}
-    certResolver: {{ .Values.traefik.dashboard.tls.certResolver | default "letsencrypt" }}
-    {{- end }}
-  {{- end }}
 {{- end }}
 {{- end }}
