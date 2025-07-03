@@ -87,7 +87,7 @@ meilisearch:
   dbPath: /meili_data
   persistence:
     enabled: true
-    size: 10Gi
+    size: 1Gi
     mountPath: /meili_data
     storageClass: ""  # Leave empty to use default storage class
   resources:
