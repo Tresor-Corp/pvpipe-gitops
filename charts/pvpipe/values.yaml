@@ -117,6 +117,7 @@ traefik:
     kubernetesCRD:
       enabled: true
       allowCrossNamespace: false
+      namespaces: []  # Empty array means watch only own namespace
     kubernetesIngress:
       enabled: false
   logs:
