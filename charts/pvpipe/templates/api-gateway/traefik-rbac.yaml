@@ -50,6 +50,6 @@ roleRef:
   name: {{ include "pvpipe.fullname" . }}-traefik
 subjects:
   - kind: ServiceAccount
-    name: {{ .Release.Name }}-traefik
+    name: {{ include "pvpipe.fullname" . }}-traefik
     namespace: {{ .Release.Namespace }}
 {{- end }}
