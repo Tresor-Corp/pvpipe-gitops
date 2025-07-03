@@ -92,11 +92,11 @@ meilisearch:
     storageClass: ""  # Leave empty to use default storage class
   resources:
     limits:
-      cpu: "500m"
-      memory: "512Mi"
+      cpu: "1"
+      memory: "2Gi"
     requests:
-      cpu: "250m"
-      memory: "256Mi"
+      cpu: "500m"
+      memory: "1Gi"
 # Traefik API Gateway
 traefik:
   enabled: true
