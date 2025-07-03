@@ -112,11 +112,12 @@ traefik:
       protocol: TCP
   ingressRoute:
     dashboard:
-      enabled: true
+      enabled: false  # Disabled to prevent /api path conflict with backend
   globalArguments: []
   additionalArguments:
     - "--providers.kubernetescrd.namespaces=$(POD_NAMESPACE)"
     - "--providers.kubernetescrd.allowCrossNamespace=false"
+    - "--api.insecure=false"  # Disable API to prevent path conflicts
   rbac:
     enabled: true
     namespaced: true
