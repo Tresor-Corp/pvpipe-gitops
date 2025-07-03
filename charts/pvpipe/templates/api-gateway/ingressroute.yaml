@@ -14,28 +14,8 @@ spec:
   routes:
     {{- range $name, $route := .Values.traefik.routes }}
     {{- if $route.enabled }}
-    {{- if ne $name "root" }}
-    - match: Host(`{{ $.Values.traefik.apiGateway.host }}`) && PathPrefix(`{{ $route.pathPrefix }}`)
-      kind: Rule
-      priority: 100
-      services:
-        - name: {{ tpl $route.service $ }}
-          port: {{ $route.port }}
-      {{- if $route.middlewares }}
-      middlewares:
-        {{- range $route.middlewares }}
-        - name: {{ include "pvpipe.fullname" $ }}-{{ . }}
-        {{- end }}
-      {{- end }}
-    {{- end }}
-    {{- end }}
-    {{- end }}
-    {{- range $name, $route := .Values.traefik.routes }}
-    {{- if and $route.enabled (eq $name "root") }}
-    # Catch-all route for any host
     - match: PathPrefix(`{{ $route.pathPrefix }}`)
       kind: Rule
-      priority: 1
       services:
         - name: {{ tpl $route.service $ }}
           port: {{ $route.port }}
