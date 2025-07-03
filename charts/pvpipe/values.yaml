@@ -113,14 +113,16 @@ traefik:
   ingressRoute:
     dashboard:
       enabled: true
+  globalArguments: []
+  additionalArguments:
+    - "--providers.kubernetescrd.namespaces=$(POD_NAMESPACE)"
+    - "--providers.kubernetescrd.allowCrossNamespace=false"
   rbac:
     enabled: true
     namespaced: true
-  # Force namespace isolation
   deployment:
-    additionalArguments:
-      - "--providers.kubernetescrd.namespaces={{ .Release.Namespace }}"
-      - "--providers.kubernetescrd.allowCrossNamespace=false"
+    podAnnotations:
+      "namespace-isolation": "true"
   providers:
     kubernetesCRD:
       enabled: true
