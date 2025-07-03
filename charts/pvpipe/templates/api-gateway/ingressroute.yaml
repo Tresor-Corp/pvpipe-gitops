@@ -11,11 +11,17 @@ metadata:
 spec:
   entryPoints:
     - web
+    - websecure
   routes:
     {{- range $name, $route := .Values.traefik.routes }}
     {{- if $route.enabled }}
     - match: PathPrefix(`{{ $route.pathPrefix }}`)
       kind: Rule
+      {{- if eq $route.pathPrefix "/" }}
+      priority: 1
+      {{- else }}
+      priority: 10
+      {{- end }}
       services:
         - name: {{ tpl $route.service $ }}
           port: {{ $route.port }}
