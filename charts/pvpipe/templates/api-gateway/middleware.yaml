@@ -135,35 +135,4 @@ spec:
     accessControlMaxAge: {{ .Values.traefik.middleware.cors.maxAge | default 100 }}
     addVaryHeader: {{ .Values.traefik.middleware.cors.addVaryHeader | default true }}
 {{- end }}
-
-
-{{- if .Values.traefik.middleware.jwtForwardAuth.enabled }}
----
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: {{ include "pvpipe.fullname" . }}-jwt-forward-auth
-  labels:
-    {{- include "pvpipe.labels" . | nindent 4 }}
-    app.kubernetes.io/component: traefik-middleware
-spec:
-  forwardAuth:
-    address: {{ .Values.traefik.middleware.jwtForwardAuth.authEndpoint }}
-    {{- if .Values.traefik.middleware.jwtForwardAuth.trustForwardHeader }}
-    trustForwardHeader: {{ .Values.traefik.middleware.jwtForwardAuth.trustForwardHeader }}
-    {{- end }}
-    {{- if .Values.traefik.middleware.jwtForwardAuth.authResponseHeaders }}
-    authResponseHeaders:
-      {{- toYaml .Values.traefik.middleware.jwtForwardAuth.authResponseHeaders | nindent 6 }}
-    {{- end }}
-    {{- if .Values.traefik.middleware.jwtForwardAuth.authResponseHeadersRegex }}
-    authResponseHeadersRegex: {{ .Values.traefik.middleware.jwtForwardAuth.authResponseHeadersRegex }}
-    {{- end }}
-    {{- if .Values.traefik.middleware.jwtForwardAuth.authRequestHeaders }}
-    authRequestHeaders:
-      {{- toYaml .Values.traefik.middleware.jwtForwardAuth.authRequestHeaders | nindent 6 }}
-    {{- end }}
-    tls:
-      insecureSkipVerify: {{ .Values.traefik.middleware.jwtForwardAuth.tls.insecureSkipVerify | default false }}
-{{- end }}
 {{- end }}

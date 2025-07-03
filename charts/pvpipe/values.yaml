@@ -102,7 +102,7 @@ traefik:
   enabled: true
   # Traefik chart values
   service:
-    type: LoadBalancer
+    type: ClusterIP
   ports:
     web:
       port: 8000
@@ -193,10 +193,7 @@ traefik:
         - headers
         - compress
   dashboard:
-    enabled: true
-    host: traefik.pvpipe.tresor.vn
-    middlewares:
-      - basic-auth
+    enabled: false
   # Middleware configurations
   middleware:
     rateLimit:
@@ -228,9 +225,7 @@ traefik:
     compress:
       enabled: true
     basicAuth:
-      enabled: true
-      existingSecret: ""  # Use existing secret name or leave empty to generate
-      users: ""  # htpasswd format: username:encrypted-password
+      enabled: false
     cors:
       enabled: false
       allowMethods:
@@ -247,18 +242,5 @@ traefik:
       maxAge: 100
       addVaryHeader: true
     jwtForwardAuth:
-      enabled: true
-      # Forward authentication to external service
-      authEndpoint: "http://auth-service.default.svc.cluster.local/verify"
-      trustForwardHeader: true
-      authResponseHeaders:
-        - X-User-Id
-        - X-User-Email
-        - X-User-Roles
-      authResponseHeadersRegex: ""
-      authRequestHeaders:
-        - Authorization
-        - X-Original-URL
-      tls:
-        insecureSkipVerify: false
+      enabled: false
 # Environment variables

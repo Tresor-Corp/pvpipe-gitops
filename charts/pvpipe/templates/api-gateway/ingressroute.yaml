@@ -19,41 +19,12 @@ spec:
       services:
         - name: {{ tpl $route.service $ }}
           port: {{ $route.port }}
-      {{- if or $route.middlewares $route.protected }}
+      {{- if $route.middlewares }}
       middlewares:
         {{- range $route.middlewares }}
         - name: {{ include "pvpipe.fullname" $ }}-{{ . }}
         {{- end }}
-        {{- if and $route.protected $.Values.traefik.middleware.jwtForwardAuth.enabled }}
-        - name: {{ include "pvpipe.fullname" $ }}-jwt-forward-auth
-        {{- end }}
       {{- end }}
     {{- end }}
     {{- end }}
----
-{{- if .Values.traefik.dashboard.enabled }}
-# Traefik Dashboard IngressRoute
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: {{ include "pvpipe.fullname" . }}-traefik-dashboard
-  labels:
-    {{- include "pvpipe.labels" . | nindent 4 }}
-    app.kubernetes.io/component: traefik
-spec:
-  entryPoints:
-    - web
-  routes:
-    - match: Host(`{{ .Values.traefik.dashboard.host }}`)
-      kind: Rule
-      services:
-        - name: api@internal
-          kind: TraefikService
-      {{- if .Values.traefik.dashboard.middlewares }}
-      middlewares:
-        {{- range .Values.traefik.dashboard.middlewares }}
-        - name: {{ include "pvpipe.fullname" $ }}-{{ . }}
-        {{- end }}
-      {{- end }}
-{{- end }}
 {{- end }}
