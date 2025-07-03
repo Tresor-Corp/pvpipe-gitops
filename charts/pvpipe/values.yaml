@@ -119,6 +119,7 @@ traefik:
   ingressRoute:
     dashboard:
       enabled: false  # Disabled to prevent /api path conflict with backend
+      tls: false  # Disable TLS to prevent certResolver errors
   globalArguments: []
   additionalArguments:
     - "--providers.kubernetescrd.namespaces=$(POD_NAMESPACE)"
