@@ -24,7 +24,6 @@ spec:
       services:
         - name: {{ tpl $route.service $ }}
           port: {{ $route.port }}
-          namespace: {{ $.Release.Namespace }}
       {{- if $route.middlewares }}
       middlewares:
         {{- range $route.middlewares }}

@@ -113,11 +113,15 @@ traefik:
   ingressRoute:
     dashboard:
       enabled: true
+  rbac:
+    enabled: true
+    namespaced: true
   providers:
     kubernetesCRD:
       enabled: true
       allowCrossNamespace: false
-      namespaces: []  # Empty array means watch only own namespace
+      namespaces: 
+        - "{{ .Release.Namespace }}"
     kubernetesIngress:
       enabled: false
   logs:
