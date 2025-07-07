@@ -24,10 +24,15 @@ spec:
       services:
         - name: {{ tpl $route.service $ }}
           port: {{ $route.port }}
-      {{- if $route.middlewares }}
+      {{- if or $route.middlewares (and $route.protected $.Values.traefik.middleware.jwt.enabled) }}
       middlewares:
+        {{- if and $route.protected $.Values.traefik.middleware.jwt.enabled }}
+        - name: {{ include "pvpipe.fullname" $ }}-jwt-auth
+        {{- end }}
+        {{- if $route.middlewares }}
         {{- range $route.middlewares }}
         - name: {{ include "pvpipe.fullname" $ }}-{{ . }}
+        {{- end }}
         {{- end }}
       {{- end }}
     {{- end }}

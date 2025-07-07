@@ -1,0 +1,32 @@
+{{- if and .Values.traefik.enabled .Values.traefik.middleware.jwt.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-jwt-auth
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik-middleware
+spec:
+  plugin:
+    jwt:
+      Secret: {{ .Values.traefik.middleware.jwt.secret.existingSecret | default (printf "%s-jwt-secret" (include "pvpipe.fullname" .)) }}
+      SecretKey: {{ .Values.traefik.middleware.jwt.secret.key | default "jwt-secret" }}
+      Algorithm: {{ .Values.traefik.middleware.jwt.algorithm | default "HS256" }}
+      {{- if .Values.traefik.middleware.jwt.issuer }}
+      Issuer: {{ .Values.traefik.middleware.jwt.issuer }}
+      {{- end }}
+      {{- if .Values.traefik.middleware.jwt.audience }}
+      Audience: {{ .Values.traefik.middleware.jwt.audience }}
+      {{- end }}
+      {{- if .Values.traefik.middleware.jwt.requiredClaims }}
+      PayloadFields:
+        {{- toYaml .Values.traefik.middleware.jwt.requiredClaims | nindent 8 }}
+      {{- end }}
+      {{- if .Values.traefik.middleware.jwt.forwardHeaders }}
+      JwtHeaders:
+        {{- range .Values.traefik.middleware.jwt.forwardHeaders }}
+        {{ .header }}: {{ .claim }}
+        {{- end }}
+      {{- end }}
+{{- end }}
