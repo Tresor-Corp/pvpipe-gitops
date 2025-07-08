@@ -1,0 +1,13 @@
+{{- if .Values.mockVnptSmartca.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-mock-vnpt-smartca
+spec:
+  selector:
+    app: {{ .Release.Name }}-mock-vnpt-smartca
+  ports:
+    - protocol: TCP
+      port: {{ .Values.mockVnptSmartca.servicePort | default 8080 }}
+      targetPort: {{ .Values.mockVnptSmartca.containerPort | default 8080 }}
+{{- end }}

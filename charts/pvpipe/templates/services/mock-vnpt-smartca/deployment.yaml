@@ -1,0 +1,32 @@
+{{- if .Values.mockVnptSmartca.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-mock-vnpt-smartca
+spec:
+  replicas: {{ .Values.mockVnptSmartca.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-mock-vnpt-smartca
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-mock-vnpt-smartca
+    spec:
+      containers:
+        - name: mock-vnpt-smartca
+          image: "{{ .Values.mockVnptSmartca.image.repository }}:{{ .Values.mockVnptSmartca.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.mockVnptSmartca.containerPort | default 8080 }}
+          env:
+            {{- if .Values.mockVnptSmartca.env }}
+            {{- range $key, $value := .Values.mockVnptSmartca.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+          {{- if .Values.mockVnptSmartca.resources }}
+          resources:
+            {{- toYaml .Values.mockVnptSmartca.resources | nindent 12 }}
+          {{- end }}
+{{- end }}
