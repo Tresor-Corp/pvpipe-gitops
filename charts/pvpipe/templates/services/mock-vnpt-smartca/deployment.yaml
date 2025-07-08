@@ -13,6 +13,8 @@ spec:
       labels:
         app: {{ .Release.Name }}-mock-vnpt-smartca
     spec:
+      imagePullSecrets:
+        - name: aws-registry
       containers:
         - name: mock-vnpt-smartca
           image: "{{ .Values.mockVnptSmartca.image.repository }}:{{ .Values.mockVnptSmartca.image.tag }}"
