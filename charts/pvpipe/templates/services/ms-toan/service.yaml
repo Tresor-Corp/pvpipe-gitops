@@ -1,0 +1,19 @@
+{{- if .Values.msToan.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-toan
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-toan
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.msToan.servicePort | default 8080 }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "pvpipe.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-toan
+{{- end }}

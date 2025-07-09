@@ -116,6 +116,46 @@ meilisearch:
     requests:
       cpu: "500m"
       memory: "1Gi"
+
+# MS-Toan Microservice (JWT Auth .NET)
+msToan:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-toan
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8080
+  servicePort: 8080
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env:
+    ASPNETCORE_ENVIRONMENT: "Production"
+
+# MS-Quoc Microservice (JWT Auth Java)
+msQuoc:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-quoc
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8080
+  servicePort: 8080
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env:
+    SPRING_PROFILES_ACTIVE: "production"
 # Traefik API Gateway
 traefik:
   enabled: true
@@ -229,6 +269,34 @@ traefik:
         - rate-limit
         - headers
         - compress
+    # MS-Toan JWT Auth Service
+    ms-toan:
+      enabled: true
+      pathPrefix: /ms-toan
+      stripPrefix: true
+      service: "{{ .Release.Name }}-ms-toan"
+      port: 8080
+      protected: false  # Has its own auth endpoints
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # MS-Quoc JWT Auth Service
+    ms-quoc:
+      enabled: true
+      pathPrefix: /ms-quoc
+      stripPrefix: true
+      service: "{{ .Release.Name }}-ms-quoc"
+      port: 8080
+      protected: false  # Has its own auth endpoints
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
   dashboard:
     enabled: false
   # Middleware configurations
