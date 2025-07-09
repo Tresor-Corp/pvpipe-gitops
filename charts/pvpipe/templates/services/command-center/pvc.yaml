@@ -1,0 +1,18 @@
+{{- if and .Values.commandCenter.enabled .Values.commandCenter.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-command-center-pvc
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: command-center
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.commandCenter.persistence.size | default "1Gi" }}
+  {{- if .Values.commandCenter.persistence.storageClass }}
+  storageClassName: {{ .Values.commandCenter.persistence.storageClass }}
+  {{- end }}
+{{- end }}
