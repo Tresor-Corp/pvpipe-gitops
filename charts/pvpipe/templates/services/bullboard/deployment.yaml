@@ -1,0 +1,48 @@
+{{- if .Values.bullboard.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-bullboard
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bullboard
+spec:
+  replicas: {{ .Values.bullboard.replicas | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "pvpipe.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: bullboard
+  template:
+    metadata:
+      labels:
+        {{- include "pvpipe.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: bullboard
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecrets }}
+      containers:
+        - name: bullboard
+          image: "{{ .Values.bullboard.image.repository }}:{{ .Values.bullboard.image.tag }}"
+          imagePullPolicy: {{ .Values.bullboard.image.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.bullboard.containerPort | default 3000 }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: {{ .Values.bullboard.containerPort | default 3000 | quote }}
+            - name: REDIS_HOST
+              value: {{ .Release.Name }}-redis
+            - name: REDIS_PORT
+              value: "6379"
+            {{- if .Values.bullboard.env }}
+            {{- range $key, $value := .Values.bullboard.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+          {{- if .Values.bullboard.resources }}
+          resources:
+            {{- toYaml .Values.bullboard.resources | nindent 12 }}
+          {{- end }}
+{{- end }}

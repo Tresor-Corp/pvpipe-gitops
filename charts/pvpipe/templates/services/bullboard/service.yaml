@@ -1,0 +1,19 @@
+{{- if .Values.bullboard.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-bullboard
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bullboard
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.bullboard.servicePort | default 3000 }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "pvpipe.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: bullboard
+{{- end }}
