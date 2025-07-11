@@ -38,6 +38,13 @@ spec:
               value: {{ .Values.msToan.env.ASPNETCORE_ENVIRONMENT | default "Production" | quote }}
             - name: ASPNETCORE_URLS
               value: "http://+:{{ .Values.msToan.containerPort | default 8080 }}"
+            {{- if .Values.msToan.useReadOnlyDatabase }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret
+                  key: DATABASE_URL_READONLY
+            {{- end }}
             {{- range $key, $value := .Values.msToan.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}

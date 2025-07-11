@@ -38,6 +38,13 @@ spec:
               value: {{ .Values.msQuoc.env.SPRING_PROFILES_ACTIVE | default "production" | quote }}
             - name: SERVER_PORT
               value: {{ .Values.msQuoc.containerPort | default 8080 | quote }}
+            {{- if .Values.msQuoc.useReadOnlyDatabase }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret
+                  key: DATABASE_URL_READONLY
+            {{- end }}
             {{- range $key, $value := .Values.msQuoc.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
