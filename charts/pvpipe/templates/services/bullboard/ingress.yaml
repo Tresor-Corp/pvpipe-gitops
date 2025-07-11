@@ -1,0 +1,35 @@
+{{- if and .Values.bullboard.enabled .Values.bullboard.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-bullboard
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bullboard
+  annotations:
+    {{- if .Values.bullboard.ingress.annotations }}
+    {{- range $key, $value := .Values.bullboard.ingress.annotations }}
+    {{ $key }}: {{ tpl $value $ | quote }}
+    {{- end }}
+    {{- end }}
+spec:
+  {{- if .Values.bullboard.ingress.className }}
+  ingressClassName: {{ .Values.bullboard.ingress.className }}
+  {{- end }}
+  tls:
+    - hosts:
+        - {{ .Values.bullboard.ingress.host }}
+      secretName: {{ .Values.bullboard.ingress.host }}-tls
+  rules:
+    - host: {{ .Values.bullboard.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "pvpipe.fullname" . }}-bullboard
+                port:
+                  number: {{ .Values.bullboard.servicePort }}
+{{- end }}

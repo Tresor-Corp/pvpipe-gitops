@@ -202,6 +202,21 @@ bullboard:
       cpu: "100m"
       memory: "128Mi"
   env: {}
+  # Ingress configuration
+  ingress:
+    enabled: true
+    className: nginx
+    host: bullboard.tresor.vn
+    # Basic auth users in htpasswd format
+    # Default: admin:admin - CHANGE IN PRODUCTION!
+    # Generate with: htpasswd -n username
+    authUsers: ""  # Leave empty to use default admin:admin
+    annotations:
+      cert-manager.io/cluster-issuer: cluster-issuer-tresor.vn
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/auth-type: basic
+      nginx.ingress.kubernetes.io/auth-secret: "{{ .Release.Name }}-bullboard-auth"
+      nginx.ingress.kubernetes.io/auth-realm: "BullBoard Authentication Required"
 
 # Traefik API Gateway
 traefik:
@@ -358,19 +373,6 @@ traefik:
         - retry
         - compress
         - cors
-    # BullBoard Queue Dashboard
-    bullboard:
-      enabled: true
-      pathPrefix: /bullboard
-      stripPrefix: true
-      service: "{{ .Release.Name }}-bullboard"
-      port: 3000
-      protected: false  # Using basic auth middleware instead
-      middlewares:
-        - basic-auth
-        - rate-limit
-        - headers
-        - compress
   dashboard:
     enabled: false
   # Middleware configurations
@@ -404,11 +406,7 @@ traefik:
     compress:
       enabled: true
     basicAuth:
-      enabled: true
-      # Users in htpasswd format
-      # Default: admin:admin - CHANGE IN PRODUCTION!
-      # Generate with: htpasswd -nb username password
-      users: ""  # Leave empty to use default admin:admin
+      enabled: false
     cors:
       enabled: true
       allowMethods:
