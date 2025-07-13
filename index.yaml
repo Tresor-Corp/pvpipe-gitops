@@ -3,6 +3,20 @@ entries:
   pvpipe:
   - apiVersion: v2
     appVersion: 1.5.0
+    created: "2025-07-13T08:34:12.345716306Z"
+    dependencies:
+    - condition: traefik.enabled
+      name: traefik
+      repository: https://traefik.github.io/charts
+      version: 32.1.0
+    description: A Helm chart for PVPipe deployment with Traefik API Gateway
+    digest: b920dac4cd8fdf717d93fce5d9f0c91ed981a5798e799593938d538ceb27e71b
+    name: pvpipe
+    urls:
+    - https://github.com/Tresor-Corp/pvpipe-gitops/releases/download/pvpipe-0.16.1/pvpipe-0.16.1.tgz
+    version: 0.16.1
+  - apiVersion: v2
+    appVersion: 1.5.0
     created: "2025-07-13T07:39:20.081869769Z"
     dependencies:
     - condition: traefik.enabled
@@ -424,4 +438,4 @@ entries:
     urls:
     - https://github.com/Tresor-Corp/pvpipe-gitops/releases/download/pvpipe-0.2.0/pvpipe-0.2.0.tgz
     version: 0.2.0
-generated: "2025-07-13T07:39:20.082051856Z"
+generated: "2025-07-13T08:34:12.345971193Z"
