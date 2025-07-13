@@ -19,6 +19,10 @@ spec:
       {{- if .Values.traefik.middleware.jwt.audience }}
       Audience: {{ .Values.traefik.middleware.jwt.audience }}
       {{- end }}
+      {{- if .Values.traefik.middleware.jwt.sources }}
+      JwtSources:
+        {{- toYaml .Values.traefik.middleware.jwt.sources | nindent 8 }}
+      {{- end }}
       {{- if .Values.traefik.middleware.jwt.requiredClaims }}
       PayloadFields:
         {{- toYaml .Values.traefik.middleware.jwt.requiredClaims | nindent 8 }}

@@ -437,6 +437,15 @@ traefik:
         value: ""
       # JWT algorithm (HS256, HS384, HS512)
       algorithm: "HS256"
+      # JWT token sources (where to look for the JWT token)
+      # Multiple sources can be configured, they will be checked in order
+      sources:
+        - type: bearer
+          key: Authorization
+        - type: cookie
+          key: jwt_token
+        - type: header
+          key: X-Auth-Token
       # Required claims
       requiredClaims:
         - exp
