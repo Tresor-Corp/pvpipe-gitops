@@ -1,0 +1,56 @@
+{{- if .Values.msFiles.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-files
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-files
+spec:
+  replicas: {{ .Values.msFiles.replicas | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "pvpipe.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ms-files
+  template:
+    metadata:
+      labels:
+        {{- include "pvpipe.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ms-files
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecrets }}
+      containers:
+        - name: ms-files
+          image: "{{ .Values.msFiles.image.repository }}:{{ .Values.msFiles.image.tag }}"
+          imagePullPolicy: {{ .Values.msFiles.image.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.msFiles.containerPort | default 8080 }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-configmap
+            - secretRef:
+                name: {{ .Release.Name }}-secret
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: {{ .Values.msFiles.env.ASPNETCORE_ENVIRONMENT | default "Production" | quote }}
+            - name: ASPNETCORE_URLS
+              value: "http://+:{{ .Values.msFiles.containerPort | default 8080 }}"
+            {{- if .Values.msFiles.useReadOnlyDatabase }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret
+                  key: DATABASE_URL_READONLY
+            {{- end }}
+            {{- range $key, $value := .Values.msFiles.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- if .Values.msFiles.resources }}
+          resources:
+            {{- toYaml .Values.msFiles.resources | nindent 12 }}
+          {{- end }}
+{{- end }}

@@ -184,6 +184,27 @@ commandCenter:
   env:
     GIN_MODE: "release"
 
+# MS-Files Microservice
+msFiles:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-files
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8080
+  servicePort: 8080
+  useReadOnlyDatabase: false
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env:
+    ASPNETCORE_ENVIRONMENT: Production
+
 # BullBoard Queue Dashboard
 bullboard:
   enabled: true
@@ -373,6 +394,32 @@ traefik:
         - retry
         - compress
         - cors
+    # MS-Files Service - API endpoints for file operations (CRUD, metadata, etc.)
+    ms-files-api:
+      enabled: true
+      pathPrefix: /api/v1/files
+      stripPrefix: true
+      service: "{{ .Release.Name }}-ms-files"
+      port: 8080
+      protected: true  # Requires JWT authentication for API operations
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # MS-Files Service - Direct file serving (images, downloads, static content)
+    ms-files-serve:
+      enabled: true
+      pathPrefix: /v1/files
+      stripPrefix: true
+      service: "{{ .Release.Name }}-ms-files"
+      port: 8080
+      protected: true  # JWT via cookie for browser file access
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
   dashboard:
     enabled: false
   # Middleware configurations
