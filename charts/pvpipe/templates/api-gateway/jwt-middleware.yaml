@@ -10,8 +10,8 @@ metadata:
 spec:
   plugin:
     jwt:
-      secret: {{ .Values.traefik.middleware.jwt.secret.existingSecret | default (printf "%s-jwt-secret" (include "pvpipe.fullname" .)) }}
-      secretKey: {{ .Values.traefik.middleware.jwt.secret.key | default "jwt-secret" }}
+      secret: {{ printf "%s-secrets" .Release.Name }}
+      secretKey: "JWT_SECRET"
       algorithm: {{ .Values.traefik.middleware.jwt.algorithm | default "HS256" }}
       {{- if .Values.traefik.middleware.jwt.issuer }}
       issuer: {{ .Values.traefik.middleware.jwt.issuer }}
