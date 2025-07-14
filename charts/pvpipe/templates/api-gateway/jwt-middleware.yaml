@@ -10,25 +10,25 @@ metadata:
 spec:
   plugin:
     jwt:
-      Secret: {{ .Values.traefik.middleware.jwt.secret.existingSecret | default (printf "%s-jwt-secret" (include "pvpipe.fullname" .)) }}
-      SecretKey: {{ .Values.traefik.middleware.jwt.secret.key | default "jwt-secret" }}
-      Algorithm: {{ .Values.traefik.middleware.jwt.algorithm | default "HS256" }}
+      secret: {{ .Values.traefik.middleware.jwt.secret.existingSecret | default (printf "%s-jwt-secret" (include "pvpipe.fullname" .)) }}
+      secretKey: {{ .Values.traefik.middleware.jwt.secret.key | default "jwt-secret" }}
+      algorithm: {{ .Values.traefik.middleware.jwt.algorithm | default "HS256" }}
       {{- if .Values.traefik.middleware.jwt.issuer }}
-      Issuer: {{ .Values.traefik.middleware.jwt.issuer }}
+      issuer: {{ .Values.traefik.middleware.jwt.issuer }}
       {{- end }}
       {{- if .Values.traefik.middleware.jwt.audience }}
-      Audience: {{ .Values.traefik.middleware.jwt.audience }}
+      audience: {{ .Values.traefik.middleware.jwt.audience }}
       {{- end }}
       {{- if .Values.traefik.middleware.jwt.sources }}
-      JwtSources:
+      jwtSources:
         {{- toYaml .Values.traefik.middleware.jwt.sources | nindent 8 }}
       {{- end }}
       {{- if .Values.traefik.middleware.jwt.requiredClaims }}
-      PayloadFields:
+      payloadFields:
         {{- toYaml .Values.traefik.middleware.jwt.requiredClaims | nindent 8 }}
       {{- end }}
       {{- if .Values.traefik.middleware.jwt.forwardHeaders }}
-      JwtHeaders:
+      jwtHeaders:
         {{- range .Values.traefik.middleware.jwt.forwardHeaders }}
         {{ .header }}: {{ .claim }}
         {{- end }}
