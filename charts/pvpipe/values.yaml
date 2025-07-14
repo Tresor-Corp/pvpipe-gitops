@@ -398,7 +398,7 @@ traefik:
       enabled: true
       pathPrefix: /api/v1/files
       stripPrefix: true
-      service: "{{ .Release.Name }}-ms-files"
+      service: "{{ .Release.Name }}-ms-files-api"
       port: 8080
       protected: true  # Requires JWT authentication for API operations
       middlewares:
@@ -412,7 +412,7 @@ traefik:
       enabled: true
       pathPrefix: /v1/files
       stripPrefix: true
-      service: "{{ .Release.Name }}-ms-files"
+      service: "{{ .Release.Name }}-ms-files-api"
       port: 8080
       protected: true  # JWT via cookie for browser file access
       middlewares:
