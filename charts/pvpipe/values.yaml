@@ -511,10 +511,4 @@ traefik:
       # Optional: validate audience
       audience: ""
 # Environment variables
-env:
-  # JWT Secret for token validation (shared between backend and Traefik)
-  JWT_SECRET: ""
-  # Database URLs - main and read-only
-  DATABASE_URL: ""
-  DATABASE_URL_READONLY: ""
-  # Add other environment variables here
+
