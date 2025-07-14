@@ -471,13 +471,13 @@ traefik:
       maxAge: 3600
       addVaryHeader: true
     jwt:
-      enabled: false
+      enabled: true
       # JWT validation configuration
       secret:
         # Secret name containing JWT signing key
-        existingSecret: ""  # Will default to {{ .Release.Name }}-jwt-secret
+        existingSecret: "{{ .Release.Name }}-secrets"
         # Key in the secret containing the JWT signing key
-        key: "jwt-secret"
+        key: "JWT_SECRET"
         # JWT signing secret value (if not using existingSecret)
         # If not provided, a random 32-character secret will be generated
         value: ""
