@@ -2,31 +2,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "pvpipe.fullname" . }}-ms-files
+  name: {{ include "pvpipe.fullname" . }}-ms-files-api
   labels:
     {{- include "pvpipe.labels" . | nindent 4 }}
-    app.kubernetes.io/component: ms-files
+    app.kubernetes.io/component: ms-files-api
 spec:
-  replicas: {{ .Values.msFiles.replicas | default 1 }}
+  replicas: {{ .Values.msFiles.api.replicas | default 1 }}
   selector:
     matchLabels:
       {{- include "pvpipe.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: ms-files
+      app.kubernetes.io/component: ms-files-api
   template:
     metadata:
       labels:
         {{- include "pvpipe.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: ms-files
+        app.kubernetes.io/component: ms-files-api
     spec:
       imagePullSecrets:
         - name: {{ .Values.image.pullSecrets }}
       containers:
-        - name: ms-files
-          image: "{{ .Values.msFiles.image.repository }}:{{ .Values.msFiles.image.tag }}"
-          imagePullPolicy: {{ .Values.msFiles.image.pullPolicy | default "IfNotPresent" }}
+        - name: ms-files-api
+          image: "{{ .Values.msFiles.api.image.repository }}:{{ .Values.msFiles.api.image.tag }}"
+          imagePullPolicy: {{ .Values.msFiles.api.image.pullPolicy | default "IfNotPresent" }}
           ports:
             - name: http
-              containerPort: {{ .Values.msFiles.containerPort | default 8080 }}
+              containerPort: {{ .Values.msFiles.api.containerPort | default 8080 }}
               protocol: TCP
           envFrom:
             - configMapRef:
@@ -34,23 +34,21 @@ spec:
             - secretRef:
                 name: {{ .Release.Name }}-secret
           env:
-            - name: ASPNETCORE_ENVIRONMENT
-              value: {{ .Values.msFiles.env.ASPNETCORE_ENVIRONMENT | default "Production" | quote }}
-            - name: ASPNETCORE_URLS
-              value: "http://+:{{ .Values.msFiles.containerPort | default 8080 }}"
-            {{- if .Values.msFiles.useReadOnlyDatabase }}
+            - name: PORT
+              value: "{{ .Values.msFiles.api.containerPort | default 8080 }}"
+            {{- if .Values.msFiles.api.useReadOnlyDatabase }}
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: {{ .Release.Name }}-secret
                   key: DATABASE_URL_READONLY
             {{- end }}
-            {{- range $key, $value := .Values.msFiles.env }}
+            {{- range $key, $value := .Values.msFiles.api.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-          {{- if .Values.msFiles.resources }}
+          {{- if .Values.msFiles.api.resources }}
           resources:
-            {{- toYaml .Values.msFiles.resources | nindent 12 }}
+            {{- toYaml .Values.msFiles.api.resources | nindent 12 }}
           {{- end }}
 {{- end }}
