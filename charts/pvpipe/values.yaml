@@ -46,25 +46,6 @@ localsignpdf:
     requests:
       cpu: "100m"
       memory: "128Mi"
-# Mock VNPT SmartCA
-mockVnptSmartca:
-  enabled: true
-  image:
-    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/mock-vnpt-smartca
-    tag: latest
-  replicas: 1
-  containerPort: 8080
-  servicePort: 8080
-  resources:
-    limits:
-      cpu: "200m"
-      memory: "256Mi"
-    requests:
-      cpu: "100m"
-      memory: "128Mi"
-  env:
-    PORT: "8080"
-    NODE_ENV: "production"
 # Gotenberg
 gotenberg:
   enabled: true
