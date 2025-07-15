@@ -6,6 +6,11 @@ metadata:
   labels:
     {{- include "pvpipe.labels" . | nindent 4 }}
     app.kubernetes.io/component: ms-auth
+  annotations:
+    keel.sh/policy: force
+    keel.sh/trigger: poll
+    keel.sh/pollSchedule: "@every 1m"
+    keel.sh/match-tag: "true"
 spec:
   replicas: {{ .Values.msAuth.replicas }}
   selector:
@@ -40,8 +45,6 @@ spec:
             - secretRef:
                 name: {{ .Release.Name }}-secret
           env:
-            - name: NODE_ENV
-              value: production
             - name: PORT
               value: "{{ .Values.msAuth.containerPort }}"
             {{- range $key, $value := .Values.msAuth.env }}
