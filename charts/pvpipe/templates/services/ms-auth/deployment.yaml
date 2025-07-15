@@ -44,13 +44,6 @@ spec:
               value: production
             - name: PORT
               value: "{{ .Values.msAuth.containerPort }}"
-            {{- if .Values.msAuth.useReadOnlyDatabase }}
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-secret
-                  key: DATABASE_URL_READONLY
-            {{- end }}
             {{- range $key, $value := .Values.msAuth.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
