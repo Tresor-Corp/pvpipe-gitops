@@ -44,39 +44,39 @@ spec:
             - name: DATABASE_HOST
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Release.Name }}-secrets
+                  name: {{ .Release.Name }}-secret
                   key: DATABASE_HOST_RO
             {{- else }}
             - name: DATABASE_HOST
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Release.Name }}-secrets
+                  name: {{ .Release.Name }}-secret
                   key: DATABASE_HOST
             {{- end }}
             - name: DATABASE_PORT
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Release.Name }}-secrets
+                  name: {{ .Release.Name }}-secret
                   key: DATABASE_PORT
             - name: DATABASE_NAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Release.Name }}-secrets
+                  name: {{ .Release.Name }}-secret
                   key: DATABASE_NAME
             - name: DATABASE_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Release.Name }}-secrets
+                  name: {{ .Release.Name }}-secret
                   key: DATABASE_USERNAME
             - name: DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Release.Name }}-secrets
+                  name: {{ .Release.Name }}-secret
                   key: DATABASE_PASSWORD
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Release.Name }}-secrets
+                  name: {{ .Release.Name }}-secret
                   key: JWT_SECRET
             {{- range $key, $value := .Values.msAuth.env }}
             - name: {{ $key }}
