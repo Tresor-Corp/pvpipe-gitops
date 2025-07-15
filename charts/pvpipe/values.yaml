@@ -287,6 +287,10 @@ traefik:
     - "--providers.kubernetescrd.allowCrossNamespace=false"
     - "--api.dashboard=true"
     - "--api.insecure=true"  # API is now safe on separate port 9000
+    - "--log.level=DEBUG"
+    - "--accesslog=true"
+    - "--accesslog.fields.defaultmode=keep"
+    - "--accesslog.fields.headers.defaultmode=keep"
   rbac:
     enabled: true
     namespaced: true
