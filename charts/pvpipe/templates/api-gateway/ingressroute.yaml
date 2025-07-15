@@ -14,7 +14,7 @@ spec:
   routes:
     {{- range $name, $route := .Values.traefik.routes }}
     {{- if $route.enabled }}
-    - match: PathPrefix(`{{ $route.pathPrefix }}`)
+    - match: {{ if $route.useRegex }}PathRegexp(`{{ $route.pathPrefix }}`){{ else }}PathPrefix(`{{ $route.pathPrefix }}`){{ end }}
       kind: Rule
       {{- if eq $route.pathPrefix "/" }}
       priority: 1
@@ -24,10 +24,10 @@ spec:
       services:
         - name: {{ tpl $route.service $ }}
           port: {{ $route.port }}
-      {{- if or $route.middlewares (and $route.protected $.Values.traefik.middleware.jwt.enabled) }}
+      {{- if or $route.middlewares (and $route.protected $.Values.traefik.middleware.forwardAuth.enabled) }}
       middlewares:
-        {{- if and $route.protected $.Values.traefik.middleware.jwt.enabled }}
-        - name: {{ include "pvpipe.fullname" $ }}-jwt-auth
+        {{- if and $route.protected $.Values.traefik.middleware.forwardAuth.enabled }}
+        - name: {{ include "pvpipe.fullname" $ }}-forward-auth
         {{- end }}
         {{- if $route.middlewares }}
         {{- range $route.middlewares }}

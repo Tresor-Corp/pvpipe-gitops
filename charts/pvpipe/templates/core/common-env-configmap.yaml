@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-common-env
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: common-config
+data:
+  # Authentication service URL for internal calls
+  AUTH_SERVICE_URL: "http://{{ .Release.Name }}-ms-auth:{{ .Values.msAuth.servicePort }}"
+  # Redis connection
+  REDIS_HOST: "{{ .Release.Name }}-redis"
+  REDIS_PORT: "6379"
+  # Meilisearch connection
+  {{- if .Values.meilisearch.enabled }}
+  MEILISEARCH_HOST: "{{ .Release.Name }}-meilisearch"
+  MEILISEARCH_PORT: "{{ .Values.meilisearch.service.port }}"
+  {{- end }}
+  # Other common services
+  {{- if .Values.gotenberg.enabled }}
+  GOTENBERG_URL: "http://{{ .Release.Name }}-gotenberg:3000"
+  {{- end }}
+  {{- if .Values.vnptsignpdf.enabled }}
+  VNPTSIGNPDF_URL: "http://{{ .Release.Name }}-vnptsignpdf:8080"
+  {{- end }}
+  {{- if .Values.localsignpdf.enabled }}
+  LOCALSIGNPDF_URL: "http://{{ .Release.Name }}-localsignpdf:8080"
+  {{- end }}

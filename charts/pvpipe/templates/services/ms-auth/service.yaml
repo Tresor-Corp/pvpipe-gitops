@@ -1,0 +1,19 @@
+{{- if .Values.msAuth.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-auth
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-auth
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.msAuth.servicePort }}
+      targetPort: {{ .Values.msAuth.containerPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "pvpipe.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-auth
+{{- end }}

@@ -165,6 +165,27 @@ commandCenter:
   env:
     GIN_MODE: "release"
 
+# MS-Auth Microservice
+msAuth:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-auth
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8080
+  servicePort: 8080
+  useReadOnlyDatabase: false
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env:
+    GIN_MODE: "release"
+
 # MS-Files Microservice
 msFiles:
   enabled: true
@@ -266,8 +287,6 @@ traefik:
     - "--providers.kubernetescrd.allowCrossNamespace=false"
     - "--api.dashboard=true"
     - "--api.insecure=true"  # API is now safe on separate port 9000
-    - "--experimental.plugins.jwt.modulename=github.com/traefik-plugins/traefik-jwt-plugin"
-    - "--experimental.plugins.jwt.version=v0.7.1"
   rbac:
     enabled: true
     namespaced: true
@@ -419,6 +438,19 @@ traefik:
         - rate-limit
         - headers
         - retry
+    # MS-Auth Service - Specific public authentication endpoints only
+    ms-auth:
+      enabled: true
+      pathPrefix: /api/auth/(login|register-otp|verify-otp|refresh-token)
+      useRegex: true  # Use regex matching for specific endpoints
+      stripPrefix: false  # Keep /api/auth prefix
+      service: "{{ .Release.Name }}-ms-auth"
+      port: 8080
+      protected: false  # Public endpoints
+      middlewares:
+        - rate-limit
+        - headers
+        - cors
   dashboard:
     enabled: false
   # Middleware configurations
@@ -470,45 +502,7 @@ traefik:
         - "*"
       maxAge: 3600
       addVaryHeader: true
-    jwt:
+    forwardAuth:
       enabled: true
-      # JWT validation configuration
-      secret:
-        # Secret name containing JWT signing key
-        existingSecret: "{{ .Release.Name }}-secrets"
-        # Key in the secret containing the JWT signing key
-        key: "JWT_SECRET"
-        # JWT signing secret value (if not using existingSecret)
-        # If not provided, a random 32-character secret will be generated
-        value: ""
-      # JWT algorithm (HS256, HS384, HS512)
-      algorithm: "HS256"
-      # JWT token sources (where to look for the JWT token)
-      # Multiple sources can be configured, they will be checked in order
-      sources:
-        - type: bearer
-          key: Authorization
-        - type: cookie
-          key: jwt_token
-        - type: header
-          key: X-Auth-Token
-      # Required claims
-      requiredClaims:
-        - exp
-        - iat
-      # Headers to forward with user information from JWT claims
-      forwardHeaders:
-        - claim: sub
-          header: X-User-Id
-        - claim: email
-          header: X-User-Email
-        - claim: role
-          header: X-User-Role
-        - claim: permissions
-          header: X-User-Permissions
-      # Optional: validate issuer
-      issuer: ""
-      # Optional: validate audience
-      audience: ""
 # Environment variables
 

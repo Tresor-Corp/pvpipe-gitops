@@ -26,6 +26,8 @@ spec:
           imagePullPolicy: {{ .Values.msFiles.worker.image.pullPolicy | default "IfNotPresent" }}
           envFrom:
             - configMapRef:
+                name: {{ .Release.Name }}-common-env
+            - configMapRef:
                 name: {{ .Release.Name }}-configmap
             - secretRef:
                 name: {{ .Release.Name }}-secret
