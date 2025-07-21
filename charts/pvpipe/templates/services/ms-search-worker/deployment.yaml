@@ -1,0 +1,57 @@
+{{- if .Values.msSearchWorker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-search-worker
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-search-worker
+  annotations:
+    keel.sh/policy: force
+    keel.sh/trigger: poll
+    keel.sh/pollSchedule: "@every 1m"
+    keel.sh/match-tag: "true"
+spec:
+  replicas: {{ .Values.msSearchWorker.replicas }}
+  selector:
+    matchLabels:
+      {{- include "pvpipe.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ms-search-worker
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.msSearchWorker.image.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "pvpipe.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ms-search-worker
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecrets }}
+      containers:
+        - name: {{ .Chart.Name }}-ms-search-worker
+          image: "{{ .Values.msSearchWorker.image.repository }}:{{ .Values.msSearchWorker.image.tag }}"
+          imagePullPolicy: {{ .Values.msSearchWorker.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "pvpipe.fullname" . }}-common-env
+            - configMapRef:
+                name: {{ .Release.Name }}-configmap
+            - secretRef:
+                name: {{ .Release.Name }}-secret
+          env:
+            {{- if .Values.msSearchWorker.useReadOnlyDatabase }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret
+                  key: DATABASE_URL_READONLY
+            {{- end }}
+            {{- range $key, $value := .Values.msSearchWorker.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.msSearchWorker.resources | nindent 12 }}
+{{- end }}

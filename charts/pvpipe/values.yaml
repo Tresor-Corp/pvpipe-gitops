@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/pvpipe-backend
-  tag: latest
+  tag: develop
   pullPolicy: Always
   pullSecrets: aws-registry
   annotations: {}
@@ -83,7 +83,7 @@ meilisearch:
     type: ClusterIP
     port: 7700
   environment: production
-  masterKey: ""  # Set a master key for production use
+  # Master key is now read from MEILISEARCH_API_KEY environment variable
   dbPath: /meili_data
   persistence:
     enabled: true
@@ -224,6 +224,64 @@ msFiles:
         cpu: "250m"
         memory: "256Mi"
     env: {}
+
+# MS-Search Worker Microservice
+msSearchWorker:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-search-worker
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8080
+  servicePort: 8080
+  useReadOnlyDatabase: false
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env: {}
+
+# MS-Search Service Microservice
+msSearchService:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-search-service
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8080
+  servicePort: 8080
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env: {}
+
+# MS-Email Microservice
+msEmail:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-email
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8080
+  servicePort: 8080
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env: {}
 
 # BullBoard Queue Dashboard
 bullboard:
@@ -454,6 +512,34 @@ traefik:
       middlewares:
         - rate-limit
         - headers
+        - cors
+    # MS-Search Service
+    ms-search-service:
+      enabled: true
+      pathPrefix: /api/v1/search
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-search-service"
+      port: 8080
+      protected: true  # Requires authentication
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # MS-Email Service
+    ms-email:
+      enabled: true
+      pathPrefix: /api/v1/email
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-email"
+      port: 8080
+      protected: true  # Requires authentication
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
         - cors
   dashboard:
     enabled: false

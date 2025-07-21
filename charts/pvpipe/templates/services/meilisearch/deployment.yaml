@@ -26,16 +26,21 @@ spec:
         - name: http
           containerPort: 7700
           protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: {{ include "pvpipe.fullname" . }}-common-env
+        - configMapRef:
+            name: {{ .Release.Name }}-configmap
+        - secretRef:
+            name: {{ .Release.Name }}-secret
         env:
         - name: MEILI_ENV
           value: {{ .Values.meilisearch.environment | default "production" }}
-        {{- if .Values.meilisearch.masterKey }}
         - name: MEILI_MASTER_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ include "pvpipe.fullname" . }}-secret
-              key: meilisearch-master-key
-        {{- end }}
+              name: {{ .Release.Name }}-secret
+              key: MEILISEARCH_API_KEY
         {{- if .Values.meilisearch.dbPath }}
         - name: MEILI_DB_PATH
           value: {{ .Values.meilisearch.dbPath }}

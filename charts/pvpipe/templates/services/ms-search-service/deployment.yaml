@@ -1,0 +1,68 @@
+{{- if .Values.msSearchService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-search-service
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-search-service
+  annotations:
+    keel.sh/policy: force
+    keel.sh/trigger: poll
+    keel.sh/pollSchedule: "@every 1m"
+    keel.sh/match-tag: "true"
+spec:
+  replicas: {{ .Values.msSearchService.replicas }}
+  selector:
+    matchLabels:
+      {{- include "pvpipe.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ms-search-service
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.msSearchService.image.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "pvpipe.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ms-search-service
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecrets }}
+      containers:
+        - name: {{ .Chart.Name }}-ms-search-service
+          image: "{{ .Values.msSearchService.image.repository }}:{{ .Values.msSearchService.image.tag }}"
+          imagePullPolicy: {{ .Values.msSearchService.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.msSearchService.containerPort }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "pvpipe.fullname" . }}-common-env
+            - configMapRef:
+                name: {{ .Release.Name }}-configmap
+            - secretRef:
+                name: {{ .Release.Name }}-secret
+          env:
+            - name: PORT
+              value: "{{ .Values.msSearchService.containerPort }}"
+            {{- range $key, $value := .Values.msSearchService.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.msSearchService.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+{{- end }}

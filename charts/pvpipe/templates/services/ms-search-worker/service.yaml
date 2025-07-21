@@ -1,0 +1,19 @@
+{{- if .Values.msSearchWorker.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-search-worker
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-search-worker
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.msSearchWorker.servicePort }}
+      targetPort: {{ .Values.msSearchWorker.containerPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "pvpipe.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-search-worker
+{{- end }}

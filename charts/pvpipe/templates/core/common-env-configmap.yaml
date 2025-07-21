@@ -15,6 +15,7 @@ data:
   {{- if .Values.meilisearch.enabled }}
   MEILISEARCH_HOST: "{{ .Release.Name }}-meilisearch"
   MEILISEARCH_PORT: "{{ .Values.meilisearch.service.port }}"
+  MEILISEARCH_URL: "http://{{ .Release.Name }}-meilisearch:{{ .Values.meilisearch.service.port }}"
   {{- end }}
   # Other common services
   {{- if .Values.gotenberg.enabled }}

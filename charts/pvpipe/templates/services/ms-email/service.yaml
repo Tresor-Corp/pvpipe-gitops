@@ -1,0 +1,19 @@
+{{- if .Values.msEmail.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-email
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-email
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.msEmail.servicePort }}
+      targetPort: {{ .Values.msEmail.containerPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "pvpipe.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-email
+{{- end }}
