@@ -269,7 +269,7 @@ msEmail:
   enabled: true
   image:
     repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-email
-    tag: latest
+    tag: develop
     pullPolicy: Always
   replicas: 1
   containerPort: 8080
@@ -530,10 +530,10 @@ traefik:
     # MS-Email Service
     ms-email:
       enabled: true
-      pathPrefix: /api/v1/email
-      stripPrefix: false
+      pathPrefix: /ms-email
+      stripPrefix: true
       service: "{{ .Release.Name }}-ms-email"
-      port: 8080
+      port: 8000
       protected: true  # Requires authentication
       middlewares:
         - rate-limit
