@@ -1,38 +1,38 @@
-{{- if .Values.msSearchWorker.enabled }}
+{{- if .Values.msSearchService.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "pvpipe.fullname" . }}-ms-search-worker
+  name: {{ include "pvpipe.fullname" . }}-ms-search-worker-polling
   labels:
     {{- include "pvpipe.labels" . | nindent 4 }}
-    app.kubernetes.io/component: ms-search-worker
+    app.kubernetes.io/component: ms-search-worker-polling
   annotations:
     keel.sh/policy: force
     keel.sh/trigger: poll
     keel.sh/pollSchedule: "@every 1m"
     keel.sh/match-tag: "true"
 spec:
-  replicas: {{ .Values.msSearchWorker.replicas }}
+  replicas: {{ .Values.msSearchWorker.polling.replicas }}
   selector:
     matchLabels:
       {{- include "pvpipe.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: ms-search-worker
+      app.kubernetes.io/component: ms-search-worker-polling
   template:
     metadata:
       annotations:
-        {{- with .Values.msSearchWorker.image.annotations }}
+        {{- with .Values.msSearchWorker.polling.image.annotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
         {{- include "pvpipe.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: ms-search-worker
+        app.kubernetes.io/component: ms-search-worker-polling
     spec:
       imagePullSecrets:
         - name: {{ .Values.image.pullSecrets }}
       containers:
-        - name: {{ .Chart.Name }}-ms-search-worker
-          image: "{{ .Values.msSearchWorker.image.repository }}:{{ .Values.msSearchWorker.image.tag }}"
-          imagePullPolicy: {{ .Values.msSearchWorker.image.pullPolicy }}
+        - name: {{ .Chart.Name }}-ms-search-worker-polling
+          image: "{{ .Values.msSearchWorker.polling.image.repository }}:{{ .Values.msSearchWorker.polling.image.tag }}"
+          imagePullPolicy: {{ .Values.msSearchWorker.polling.image.pullPolicy }}
           envFrom:
             - configMapRef:
                 name: {{ include "pvpipe.fullname" . }}-common-env
@@ -41,17 +41,17 @@ spec:
             - secretRef:
                 name: {{ .Release.Name }}-secret
           env:
-            {{- if .Values.msSearchWorker.useReadOnlyDatabase }}
+            {{- if .Values.msSearchWorker.polling.useReadOnlyDatabase }}
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: {{ .Release.Name }}-secret
                   key: DATABASE_URL_READONLY
             {{- end }}
-            {{- range $key, $value := .Values.msSearchWorker.env }}
+            {{- range $key, $value := .Values.msSearchWorker.polling.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
           resources:
-            {{- toYaml .Values.msSearchWorker.resources | nindent 12 }}
+            {{- toYaml .Values.msSearchWorker.polling.resources | nindent 12 }}
 {{- end }}

@@ -227,23 +227,36 @@ msFiles:
 
 # MS-Search Worker Microservice
 msSearchWorker:
-  enabled: true
-  image:
-    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-search-worker
-    tag: latest
-    pullPolicy: Always
-  replicas: 1
-  containerPort: 8080
-  servicePort: 8080
-  useReadOnlyDatabase: false
-  resources:
-    limits:
-      cpu: "500m"
-      memory: "512Mi"
-    requests:
-      cpu: "250m"
-      memory: "256Mi"
-  env: {}
+  polling:
+    image:
+      repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-search-worker-polling
+      tag: latest
+      pullPolicy: Always
+    replicas: 1
+    useReadOnlyDatabase: false
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
+    env: {}
+  consume:
+    image:
+      repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-search-worker-consumer
+      tag: latest
+      pullPolicy: Always
+    replicas: 1
+    useReadOnlyDatabase: false
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
+    env: {}
 
 # MS-Search Service Microservice
 msSearchService:
@@ -262,7 +275,13 @@ msSearchService:
     requests:
       cpu: "250m"
       memory: "256Mi"
-  env: {}
+  env:
+    SERVER_PORT: "8080"
+    SERVER_READ_TIMEOUT: "30s"
+    SERVER_WRITE_TIMEOUT: "30s"
+    SERVER_IDLE_TIMEOUT: "120s"
+    AUTH_REALM: "Restricted"
+    LOG_LEVEL: "info"
 
 # MS-Email Microservice
 msEmail:
