@@ -368,6 +368,7 @@ traefik:
     - "--accesslog=true"
     - "--accesslog.fields.defaultmode=keep"
     - "--accesslog.fields.headers.defaultmode=keep"
+    - "--entrypoints.web.http.maxHeaderBytes=0"
   rbac:
     enabled: true
     namespaced: true
