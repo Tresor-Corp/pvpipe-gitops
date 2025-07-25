@@ -8,6 +8,8 @@ metadata:
 data:
   # Authentication service URL for internal calls
   AUTH_SERVICE_URL: "http://{{ .Release.Name }}-ms-auth:{{ .Values.msAuth.servicePort }}"
+  # Search service URL for internal calls
+  SEARCH_SERVICE_URL: "http://{{ .Release.Name }}-ms-search-service:{{ .Values.msSearchService.servicePort }}"
   # Redis connection
   REDIS_HOST: "{{ .Release.Name }}-redis"
   REDIS_PORT: "6379"
