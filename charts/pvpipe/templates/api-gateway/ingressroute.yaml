@@ -14,7 +14,25 @@ spec:
   routes:
     {{- range $name, $route := .Values.traefik.routes }}
     {{- if $route.enabled }}
-    - match: {{ if $route.useRegex }}PathRegexp(`{{ $route.pathPrefix }}`){{ else }}PathPrefix(`{{ $route.pathPrefix }}`){{ end }}
+    # OPTIONS requests bypass forward auth
+    - match: {{ if $route.useRegex }}Method(`OPTIONS`) && PathRegexp(`{{ $route.pathPrefix }}`){{ else }}Method(`OPTIONS`) && PathPrefix(`{{ $route.pathPrefix }}`){{ end }}
+      kind: Rule
+      {{- if eq $route.pathPrefix "/" }}
+      priority: 2
+      {{- else }}
+      priority: 11
+      {{- end }}
+      services:
+        - name: {{ tpl $route.service $ }}
+          port: {{ $route.port }}
+      {{- if $route.middlewares }}
+      middlewares:
+        {{- range $route.middlewares }}
+        - name: {{ include "pvpipe.fullname" $ }}-{{ . }}
+        {{- end }}
+      {{- end }}
+    # All other methods go through normal flow
+    - match: {{ if $route.useRegex }}!Method(`OPTIONS`) && PathRegexp(`{{ $route.pathPrefix }}`){{ else }}!Method(`OPTIONS`) && PathPrefix(`{{ $route.pathPrefix }}`){{ end }}
       kind: Rule
       {{- if eq $route.pathPrefix "/" }}
       priority: 1
