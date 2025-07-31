@@ -28,7 +28,7 @@ spec:
       {{- if $route.middlewares }}
       middlewares:
         {{- range $route.middlewares }}
-        - name: {{ include "pvpipe.fullname" $ }}-{{ . }}
+        - name: "{{ include "pvpipe.fullname" $ }}-{{ . }}"
         {{- end }}
       {{- end }}
     # All other methods go through normal flow
@@ -49,7 +49,7 @@ spec:
         {{- end }}
         {{- if $route.middlewares }}
         {{- range $route.middlewares }}
-        - name: {{ include "pvpipe.fullname" $ }}-{{ . }}
+        - name: "{{ include "pvpipe.fullname" $ }}-{{ . }}"
         {{- end }}
         {{- end }}
       {{- end }}
