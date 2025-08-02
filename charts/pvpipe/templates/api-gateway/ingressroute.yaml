@@ -1,6 +1,6 @@
 {{- if .Values.traefik.enabled }}
 ---
-# Main API Gateway IngressRoute
+# Enhanced API Gateway IngressRoute with integrated OPTIONS bypass
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -8,13 +8,93 @@ metadata:
   labels:
     {{- include "pvpipe.labels" . | nindent 4 }}
     app.kubernetes.io/component: api-gateway
+  annotations:
+    # Security annotations documenting the integrated OPTIONS handling
+    security.pvpipe.io/purpose: "Main API Gateway with integrated CORS preflight bypass"
+    security.pvpipe.io/options-handling: "integrated-enhanced"
+    security.pvpipe.io/review-date: "2025-08-02"
 spec:
   entryPoints:
     - web
+    {{- if .Values.traefik.tls.enabled }}
+    - websecure
+    {{- end }}
   routes:
+    {{- if and .Values.traefik.optionsRoute.enabled (or .Values.services.corsHandler.enabled .Values.traefik.optionsRoute.useMainBackend) }}
+    # Enhanced OPTIONS bypass route with highest priority
+    - match: Method(`OPTIONS`)
+      kind: Rule
+      priority: {{ .Values.traefik.optionsRoute.priority | default 150 }}
+      services:
+        {{- if .Values.services.corsHandler.enabled }}
+        # Route OPTIONS to dedicated CORS handler service
+        - name: {{ include "pvpipe.fullname" . }}-cors-handler
+          port: {{ .Values.services.corsHandler.port | default 8080 }}
+          {{- if .Values.services.corsHandler.healthCheck.enabled }}
+          healthCheck:
+            path: {{ .Values.services.corsHandler.healthCheck.path | default "/health" }}
+            interval: {{ .Values.services.corsHandler.healthCheck.interval | default "30s" }}
+            timeout: {{ .Values.services.corsHandler.healthCheck.timeout | default "3s" }}
+          {{- end }}
+        {{- else }}
+        # Fallback to main backend for OPTIONS requests
+        - name: {{ tpl (.Values.traefik.routes.root.service | default "{{ .Release.Name }}-backend") . }}
+          port: {{ .Values.traefik.routes.root.port | default 8000 }}
+        {{- end }}
+      middlewares:
+        # Enhanced middleware chain for OPTIONS security
+        {{- if .Values.traefik.middleware.optionsRateLimit.enhanced.enabled | default true }}
+        - name: {{ include "pvpipe.fullname" . }}-rate-limit-options-enhanced
+        {{- end }}
+        {{- if .Values.traefik.middleware.originValidation.enabled | default true }}
+        - name: {{ include "pvpipe.fullname" . }}-origin-validation
+        {{- end }}
+        {{- if .Values.traefik.middleware.cors.enhanced.enabled | default true }}
+        - name: {{ include "pvpipe.fullname" . }}-cors-enhanced
+        {{- end }}
+        {{- if .Values.traefik.middleware.optionsMonitoring.enabled }}
+        - name: {{ include "pvpipe.fullname" . }}-options-security-monitoring
+        - name: {{ include "pvpipe.fullname" . }}-options-advanced-logging
+        {{- end }}
+        {{- if .Values.traefik.middleware.compress.enabled }}
+        - name: {{ include "pvpipe.fullname" . }}-compress
+        {{- end }}
+
+    {{- if .Values.traefik.optionsRoute.fallback.enabled }}
+    # Fallback route for non-standard OPTIONS patterns
+    - match: Method(`OPTIONS`) && PathPrefix(`{{ .Values.traefik.optionsRoute.fallback.pathPrefix | default "/api" }}`)
+      kind: Rule
+      priority: {{ .Values.traefik.optionsRoute.fallback.priority | default 140 }}
+      services:
+        {{- if .Values.services.corsHandler.enabled }}
+        - name: {{ include "pvpipe.fullname" . }}-cors-handler
+          port: {{ .Values.services.corsHandler.port | default 8080 }}
+        {{- else }}
+        - name: {{ tpl (.Values.traefik.routes.root.service | default "{{ .Release.Name }}-backend") . }}
+          port: {{ .Values.traefik.routes.root.port | default 8000 }}
+        {{- end }}
+      middlewares:
+        # Same enhanced middleware chain
+        {{- if .Values.traefik.middleware.optionsRateLimit.enhanced.enabled | default true }}
+        - name: {{ include "pvpipe.fullname" . }}-rate-limit-options-enhanced
+        {{- end }}
+        {{- if .Values.traefik.middleware.originValidation.enabled | default true }}
+        - name: {{ include "pvpipe.fullname" . }}-origin-validation
+        {{- end }}
+        {{- if .Values.traefik.middleware.cors.enhanced.enabled | default true }}
+        - name: {{ include "pvpipe.fullname" . }}-cors-enhanced
+        {{- end }}
+        {{- if .Values.traefik.middleware.optionsMonitoring.enabled }}
+        - name: {{ include "pvpipe.fullname" . }}-options-security-monitoring
+        - name: {{ include "pvpipe.fullname" . }}-options-advanced-logging
+        {{- end }}
+    {{- end }}
+    {{- end }}
+
+    # Standard non-OPTIONS routes (existing configuration)
     {{- range $name, $route := .Values.traefik.routes }}
     {{- if $route.enabled }}
-    - match: {{ if $route.useRegex }}PathRegexp(`{{ $route.pathPrefix }}`){{ else }}PathPrefix(`{{ $route.pathPrefix }}`){{ end }}
+    - match: {{ if $route.useRegex }}PathRegexp(`{{ $route.pathPrefix }}`){{ else }}PathPrefix(`{{ $route.pathPrefix }}`){{ end }} && !Method(`OPTIONS`)
       kind: Rule
       {{- if eq $route.pathPrefix "/" }}
       priority: 1
@@ -37,4 +117,19 @@ spec:
       {{- end }}
     {{- end }}
     {{- end }}
+
+  {{- if .Values.traefik.tls.enabled }}
+  tls:
+    {{- if .Values.traefik.tls.secretName }}
+    secretName: {{ .Values.traefik.tls.secretName }}
+    {{- end }}
+    {{- if .Values.traefik.tls.domains }}
+    domains:
+      {{- toYaml .Values.traefik.tls.domains | nindent 6 }}
+    {{- end }}
+    {{- if .Values.traefik.tls.options }}
+    options:
+      name: {{ .Values.traefik.tls.options }}
+    {{- end }}
+  {{- end }}
 {{- end }}

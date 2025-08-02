@@ -666,5 +666,83 @@ traefik:
       addVaryHeader: true
     forwardAuth:
       enabled: true
+    # Enhanced OPTIONS-specific middleware configurations
+    optionsRateLimit:
+      enhanced:
+        enabled: true
+        average: 1200  # 20 req/sec as recommended by security review
+        period: "1m"
+        burst: 300
+        depth: 2  # X-Forwarded-For depth for real IP detection
+        trustedIPs: []  # Additional trusted IP ranges (customize for your environment)
+    originValidation:
+      enabled: true
+    cors:
+      enhanced:
+        enabled: true
+        strictOrigins: false  # Set to true in production
+        allowOrigins:
+          - "https://app.tresor.vn"
+          - "https://pvpipe.tresor.vn"
+          - "https://admin.tresor.vn"
+        allowOriginRegex:
+          - "^https?://localhost(:[0-9]+)?$"
+          - "^https?://127\\.0\\.0\\.1(:[0-9]+)?$"
+          - "^https://.*\\.tresor\\.vn$"
+          - "^https://.*\\.pvpipe\\.com$"
+        additionalHeaders:
+          - "X-File-Name"
+          - "X-API-Version"
+          - "X-Request-ID"
+        maxAge: 86400  # 24 hours for preflight cache
+        allowCredentials: false
+    optionsMonitoring:
+      enabled: false  # Enable in production for security analysis
+  # Enhanced OPTIONS route configuration
+  optionsRoute:
+    enabled: true
+    priority: 150  # Higher than default routes (100+)
+    useMainBackend: true  # Fallback to main backend if CORS handler not available
+    fallback:
+      enabled: true
+      pathPrefix: "/api"
+      priority: 140
+  # TLS configuration for HTTPS
+  tls:
+    enabled: false
+    secretName: ""
+    domains: []
+    options: ""
+
+# CORS Handler Service Configuration (optional dedicated service)
+services:
+  corsHandler:
+    enabled: false  # Set to true to use dedicated CORS handler instead of main backend
+    replicas: 2
+    port: 8080
+    image:
+      repository: "nginx"
+      tag: "alpine"
+      pullPolicy: "IfNotPresent"
+    resources:
+      limits:
+        cpu: "100m"
+        memory: "64Mi"
+      requests:
+        cpu: "50m"
+        memory: "32Mi"
+    healthCheck:
+      enabled: true
+      path: "/health"
+      interval: "30s"
+      timeout: "3s"
+    service:
+      type: "ClusterIP"
+      annotations: {}
+
+# Network Policy Configuration
+networkPolicy:
+  corsHandler:
+    enabled: false  # Set to true to enable network isolation for CORS handler
 # Environment variables
 
