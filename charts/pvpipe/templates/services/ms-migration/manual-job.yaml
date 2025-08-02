@@ -1,36 +1,24 @@
-{{- if .Values.msMigration.enabled }}
-apiVersion: apps/v1
-kind: Deployment
+{{- if .Values.msMigration.manualJob.enabled }}
+apiVersion: batch/v1
+kind: Job
 metadata:
-  name: {{ include "pvpipe.fullname" . }}-ms-migration
+  name: {{ include "pvpipe.fullname" . }}-ms-migration-manual
   labels:
     {{- include "pvpipe.labels" . | nindent 4 }}
-    app.kubernetes.io/component: ms-migration
-  annotations:
-    keel.sh/policy: force
-    keel.sh/trigger: poll
-    keel.sh/pollSchedule: "@every 1m"
-    keel.sh/match-tag: "true"
+    app.kubernetes.io/component: ms-migration-manual
 spec:
-  replicas: {{ .Values.msMigration.replicas }}
-  selector:
-    matchLabels:
-      {{- include "pvpipe.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: ms-migration
+  backoffLimit: {{ .Values.msMigration.backoffLimit | default 3 }}
   template:
     metadata:
-      annotations:
-        {{- with .Values.msMigration.image.annotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
       labels:
         {{- include "pvpipe.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: ms-migration
+        app.kubernetes.io/component: ms-migration-manual
     spec:
+      restartPolicy: Never
       imagePullSecrets:
         - name: {{ .Values.image.pullSecrets }}
       containers:
-        - name: {{ .Chart.Name }}-ms-migration
+        - name: {{ .Chart.Name }}-ms-migration-manual
           image: "{{ .Values.msMigration.image.repository }}:{{ .Values.msMigration.image.tag }}"
           imagePullPolicy: {{ .Values.msMigration.image.pullPolicy }}
           command: ["sleep", "infinity"]

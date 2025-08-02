@@ -330,7 +330,16 @@ msMigration:
     repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-migration
     tag: latest
     pullPolicy: Always
-  replicas: 1
+  # Job configuration
+  helmHook: "post-install,post-upgrade"
+  hookWeight: "-5"
+  hookDeletePolicy: "before-hook-creation,hook-succeeded"
+  backoffLimit: 3
+  activeDeadlineSeconds: 300
+  # Manual job for debugging/manual operations
+  manualJob:
+    enabled: false
+  # Migration settings
   migrationsPath: "file://migrations"
   migrationTable: "schema_migrations"
   environment: "production"
