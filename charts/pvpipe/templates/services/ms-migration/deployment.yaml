@@ -1,0 +1,61 @@
+{{- if .Values.msMigration.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-migration
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-migration
+  annotations:
+    keel.sh/policy: force
+    keel.sh/trigger: poll
+    keel.sh/pollSchedule: "@every 1m"
+    keel.sh/match-tag: "true"
+spec:
+  replicas: {{ .Values.msMigration.replicas }}
+  selector:
+    matchLabels:
+      {{- include "pvpipe.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ms-migration
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.msMigration.image.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "pvpipe.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ms-migration
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecrets }}
+      containers:
+        - name: {{ .Chart.Name }}-ms-migration
+          image: "{{ .Values.msMigration.image.repository }}:{{ .Values.msMigration.image.tag }}"
+          imagePullPolicy: {{ .Values.msMigration.image.pullPolicy }}
+          command: ["sleep", "infinity"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "pvpipe.fullname" . }}-common-env
+            - configMapRef:
+                name: {{ .Release.Name }}-configmap
+            - secretRef:
+                name: {{ .Release.Name }}-secret
+          env:
+            - name: MIGRATIONS_PATH
+              value: "{{ .Values.msMigration.migrationsPath }}"
+            - name: MIGRATION_TABLE
+              value: "{{ .Values.msMigration.migrationTable }}"
+            - name: ENVIRONMENT
+              value: "{{ .Values.msMigration.environment }}"
+            - name: MAX_RETRIES
+              value: "{{ .Values.msMigration.maxRetries }}"
+            - name: RETRY_DELAY_SECONDS
+              value: "{{ .Values.msMigration.retryDelaySeconds }}"
+            {{- range $key, $value := .Values.msMigration.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.msMigration.resources | nindent 12 }}
+{{- end }}

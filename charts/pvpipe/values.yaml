@@ -323,6 +323,28 @@ msSettings:
     NODE_ENV: "production"
     REDIS_PREFIX: "settings:"
 
+# MS-Migration Microservice
+msMigration:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-migration
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  migrationsPath: "file://migrations"
+  migrationTable: "schema_migrations"
+  environment: "production"
+  maxRetries: "3"
+  retryDelaySeconds: "5"
+  resources:
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+  env: {}
+
 # BullBoard Queue Dashboard
 bullboard:
   enabled: true
