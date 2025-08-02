@@ -1,0 +1,19 @@
+{{- if .Values.msSettings.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-settings
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-settings
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.msSettings.servicePort }}
+      targetPort: {{ .Values.msSettings.containerPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "pvpipe.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-settings
+{{- end }}

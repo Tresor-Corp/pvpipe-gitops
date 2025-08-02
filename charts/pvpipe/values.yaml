@@ -302,6 +302,27 @@ msEmail:
       memory: "256Mi"
   env: {}
 
+# MS-Settings Microservice
+msSettings:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-settings
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8082
+  servicePort: 8082
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env:
+    NODE_ENV: "production"
+    REDIS_PREFIX: "settings:"
+
 # BullBoard Queue Dashboard
 bullboard:
   enabled: true
