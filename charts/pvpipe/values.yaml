@@ -613,6 +613,34 @@ traefik:
         - retry
         - compress
         - cors
+    # MS-Settings Service
+    ms-settings:
+      enabled: true
+      pathPrefix: /api/v1/settings
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-settings"
+      port: 8082
+      protected: false  # Public endpoint for /public paths
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # MS-Notifications Service
+    ms-notifications:
+      enabled: true
+      pathPrefix: /api/v1/notifications
+      stripPrefix: true
+      service: "{{ .Release.Name }}-ms-notifications-api"
+      port: 8080
+      protected: true  # Requires authentication
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
   dashboard:
     enabled: false
   # Middleware configurations
@@ -744,5 +772,39 @@ services:
 networkPolicy:
   corsHandler:
     enabled: false  # Set to true to enable network isolation for CORS handler
+
+# MS-Notifications Microservice
+msNotifications:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-notifications
+    tag: latest
+    pullPolicy: Always
+  replicas: 2
+  containerPort: 8080
+  servicePort: 8080
+  # API container resources
+  api:
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
+  # Worker container resources
+  worker:
+    resources:
+      limits:
+        cpu: "400m"
+        memory: "256Mi"
+      requests:
+        cpu: "200m"
+        memory: "128Mi"
+  env:
+    GIN_MODE: "release"
+    WORKER_CONCURRENCY: "10"
+    QUEUE_PRIORITIES: "critical:10,high:6,normal:4,low:2,bulk:1"
+
 # Environment variables
 

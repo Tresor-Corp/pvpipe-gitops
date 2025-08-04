@@ -10,6 +10,10 @@ data:
   AUTH_SERVICE_URL: "http://{{ .Release.Name }}-ms-auth:{{ .Values.msAuth.servicePort }}"
   # Search service URL for internal calls
   SEARCH_SERVICE_URL: "http://{{ .Release.Name }}-ms-search-service:{{ .Values.msSearchService.servicePort }}"
+  # Notifications service URL for internal calls
+  {{- if .Values.msNotifications.enabled }}
+  NOTIFICATIONS_SERVICE_URL: "http://{{ .Release.Name }}-ms-notifications-api:{{ .Values.msNotifications.servicePort }}"
+  {{- end }}
   # Redis connection
   REDIS_HOST: "{{ .Release.Name }}-redis"
   REDIS_PORT: "6379"

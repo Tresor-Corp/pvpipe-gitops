@@ -1,0 +1,108 @@
+{{- if and .Values.traefik.enabled .Values.services.corsHandler.enabled .Values.networkPolicy.corsHandler.enabled }}
+---
+# Network Policy for CORS Handler - Security Isolation
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-cors-handler
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cors-handler
+  annotations:
+    security.pvpipe.io/purpose: "Network isolation for CORS handler service"
+    security.pvpipe.io/policy-type: "ingress-egress"
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "pvpipe.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: cors-handler
+  
+  policyTypes:
+    - Ingress
+    - Egress
+  
+  # Ingress rules - only allow traffic from Traefik
+  ingress:
+    # Allow traffic from Traefik proxy
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+        {{- if .Values.networkPolicy.corsHandler.ingress.additionalFromSelectors }}
+        {{- toYaml .Values.networkPolicy.corsHandler.ingress.additionalFromSelectors | nindent 8 }}
+        {{- end }}
+        # Allow traffic from specific namespaces if configured
+        {{- if .Values.networkPolicy.corsHandler.ingress.allowedNamespaces }}
+        {{- range .Values.networkPolicy.corsHandler.ingress.allowedNamespaces }}
+        - namespaceSelector:
+            matchLabels:
+              name: {{ . }}
+        {{- end }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.services.corsHandler.port | default 8080 }}
+    
+    # Allow health check probes from kubelet
+    - from: []  # Empty from means allow from any source
+      ports:
+        - protocol: TCP
+          port: {{ .Values.services.corsHandler.port | default 8080 }}
+      # This is limited to health check endpoints by the service configuration
+  
+  # Egress rules - minimal outbound access
+  egress:
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    
+    # Allow outbound HTTPS for potential health checks or updates
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+    
+    # Allow communication with Kubernetes API server (if needed for service discovery)
+    {{- if .Values.networkPolicy.corsHandler.egress.allowKubernetesApi }}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: TCP
+          port: 443
+    {{- end }}
+    
+    # Additional egress rules if specified
+    {{- if .Values.networkPolicy.corsHandler.egress.additional }}
+    {{- toYaml .Values.networkPolicy.corsHandler.egress.additional | nindent 4 }}
+    {{- end }}
+
+{{- if .Values.networkPolicy.corsHandler.denyAll.enabled }}
+---
+# Deny-all default policy for enhanced security (optional)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-cors-handler-deny-all
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cors-handler-security
+  annotations:
+    security.pvpipe.io/purpose: "Default deny-all policy for CORS handler"
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "pvpipe.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: cors-handler
+  policyTypes:
+    - Ingress
+    - Egress
+  # Empty ingress and egress rules = deny all
+  # The specific allow rules above will override this
+{{- end }}
+{{- end }}

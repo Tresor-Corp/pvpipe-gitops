@@ -1,0 +1,97 @@
+{{- if and .Values.traefik.enabled false }}
+---
+# OPTIONS-specific rate limiting middleware
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-rate-limit-options
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik-middleware
+  annotations:
+    security.pvpipe.io/purpose: "Rate limiting for OPTIONS preflight requests"
+spec:
+  rateLimit:
+    # More permissive rate limiting for OPTIONS (preflight can be frequent)
+    average: {{ .Values.traefik.middleware.optionsRateLimit.average | default 300 }}
+    period: {{ .Values.traefik.middleware.optionsRateLimit.period | default "1m" }}
+    burst: {{ .Values.traefik.middleware.optionsRateLimit.burst | default 150 }}
+    sourceCriterion:
+      # Rate limit by IP to prevent abuse
+      ipStrategy:
+        depth: 1
+        excludedIPs:
+          - "127.0.0.1/32"
+          - "10.0.0.0/8"
+          - "172.16.0.0/12"
+          - "192.168.0.0/16"
+
+---
+# Security headers specifically for OPTIONS responses
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-security-headers
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik-middleware
+  annotations:
+    security.pvpipe.io/purpose: "Security headers for CORS preflight responses"
+spec:
+  headers:
+    customResponseHeaders:
+      X-Content-Type-Options: "nosniff"
+      X-Frame-Options: "DENY"
+      X-XSS-Protection: "1; mode=block"
+      Referrer-Policy: "strict-origin-when-cross-origin"
+      Cache-Control: "no-cache, no-store, must-revalidate"
+      Pragma: "no-cache"
+      Expires: "0"
+      # Custom header to identify OPTIONS bypass route
+      X-CORS-Preflight: "handled"
+    # Remove potential information disclosure headers
+    customRequestHeaders:
+      Server: ""
+      X-Powered-By: ""
+
+{{- if .Values.traefik.middleware.logging.enabled }}
+---
+# Specific logging middleware for OPTIONS requests
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-options-logging
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik-middleware
+  annotations:
+    security.pvpipe.io/purpose: "Enhanced logging for OPTIONS preflight requests"
+spec:
+  accessLog:
+    # Log OPTIONS requests with additional context
+    fields:
+      defaultMode: keep
+      names:
+        ClientAddr: keep
+        ClientHost: keep
+        ClientPort: keep
+        ClientUsername: drop
+        Duration: keep
+        OriginDuration: keep
+        OriginStatus: keep
+        Overhead: keep
+        RequestAddr: keep
+        RequestCount: keep
+        RequestHost: keep
+        RequestMethod: keep
+        RequestPath: keep
+        RequestPort: keep
+        RequestProtocol: keep
+        RequestScheme: keep
+        RetryAttempts: keep
+        StartUTC: keep
+        frontend_request_Origin: keep
+        downstream_request_Access-Control-Request-Method: keep
+        downstream_request_Access-Control-Request-Headers: keep
+{{- end }}
+{{- end }}
