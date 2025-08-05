@@ -103,12 +103,6 @@ spec:
               value: "yes"
             - name: PGBOUNCER_SET_DATABASE_PASSWORD
               value: "yes"
-            # DSN for connection info
-            - name: PGBOUNCER_DSN_0
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-secret
-                  key: DATABASE_URL_ORIGINAL
           livenessProbe:
             tcpSocket:
               port: pgbouncer
