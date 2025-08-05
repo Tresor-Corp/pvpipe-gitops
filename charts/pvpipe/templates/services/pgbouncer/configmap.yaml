@@ -1,0 +1,85 @@
+{{- if .Values.pgbouncer.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-pgbouncer-config
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pgbouncer
+data:
+  # PgBouncer init script to generate config from environment
+  pgbouncer-init.sh: |
+    #!/bin/sh
+    set -e
+    
+    # Extract connection details from DATABASE_URL_ORIGINAL
+    if [ -n "$DATABASE_URL_ORIGINAL" ]; then
+      # Parse DATABASE_URL format: postgresql://user:pass@host:port/database
+      DB_USER=$(echo $DATABASE_URL_ORIGINAL | sed -n 's/postgresql:\/\/\([^:]*\):.*/\1/p')
+      DB_PASS=$(echo $DATABASE_URL_ORIGINAL | sed -n 's/postgresql:\/\/[^:]*:\([^@]*\)@.*/\1/p')
+      DB_HOST=$(echo $DATABASE_URL_ORIGINAL | sed -n 's/postgresql:\/\/[^@]*@\([^:]*\):.*/\1/p')
+      DB_PORT=$(echo $DATABASE_URL_ORIGINAL | sed -n 's/postgresql:\/\/[^@]*@[^:]*:\([^\/]*\)\/.*/\1/p')
+      DB_NAME=$(echo $DATABASE_URL_ORIGINAL | sed -n 's/postgresql:\/\/[^\/]*\/\(.*\)/\1/p')
+    else
+      # Use individual env vars if DATABASE_URL_ORIGINAL is not set
+      DB_USER=${DATABASES_USER}
+      DB_PASS=${DATABASES_PASSWORD}
+      DB_HOST=${DATABASES_HOST}
+      DB_PORT=${DATABASES_PORT:-5432}
+      DB_NAME=${DATABASES_DBNAME}
+    fi
+    
+    # Generate pgbouncer.ini
+    cat > /etc/pgbouncer/pgbouncer.ini <<EOF
+    [databases]
+    # Main database pool
+    ${DB_NAME} = host=${DB_HOST} port=${DB_PORT} dbname=${DB_NAME}
+    
+    # Read-only database pool (using same database)
+    ${DB_NAME}_readonly = host=${DB_HOST} port=${DB_PORT} dbname=${DB_NAME}
+    
+    [pgbouncer]
+    listen_addr = {{ .Values.pgbouncer.config.listenAddr | default "*" }}
+    listen_port = {{ .Values.pgbouncer.config.listenPort | default 5432 }}
+    
+    # Authentication
+    auth_type = {{ .Values.pgbouncer.config.authType | default "md5" }}
+    auth_file = /etc/pgbouncer/userlist.txt
+    
+    # Admin users
+    admin_users = {{ .Values.pgbouncer.config.adminUsers | default "pgbouncer" }}
+    stats_users = {{ .Values.pgbouncer.config.statsUsers | default "pgbouncer" }}
+    
+    # Pool settings
+    pool_mode = {{ .Values.pgbouncer.config.poolMode | default "transaction" }}
+    default_pool_size = {{ .Values.pgbouncer.config.defaultPoolSize | default 25 }}
+    max_client_conn = {{ .Values.pgbouncer.config.maxClientConn | default 100 }}
+    max_db_connections = {{ .Values.pgbouncer.config.maxDbConnections | default 50 }}
+    reserve_pool_size = {{ .Values.pgbouncer.config.reservePoolSize | default 5 }}
+    reserve_pool_timeout = {{ .Values.pgbouncer.config.reservePoolTimeout | default 3 }}
+    
+    # Timeouts
+    server_lifetime = {{ .Values.pgbouncer.config.serverLifetime | default 3600 }}
+    server_idle_timeout = {{ .Values.pgbouncer.config.serverIdleTimeout | default 600 }}
+    
+    # Logging
+    log_connections = {{ .Values.pgbouncer.config.logConnections | default 1 }}
+    log_disconnections = {{ .Values.pgbouncer.config.logDisconnections | default 1 }}
+    log_pooler_errors = {{ .Values.pgbouncer.config.logPoolerErrors | default 1 }}
+    
+    # TLS/SSL
+    server_tls_sslmode = prefer
+    
+    # Other settings
+    ignore_startup_parameters = extra_float_digits
+    EOF
+    
+    # Generate userlist.txt  
+    echo "\"${DB_USER}\" \"md5$(echo -n "${DB_PASS}${DB_USER}" | md5sum | cut -d' ' -f1)\"" > /etc/pgbouncer/userlist.txt
+    
+    # Add pgbouncer admin user
+    echo "\"pgbouncer\" \"md5$(echo -n "admin123pgbouncer" | md5sum | cut -d' ' -f1)\"" >> /etc/pgbouncer/userlist.txt
+    
+    # Start PgBouncer
+    exec pgbouncer /etc/pgbouncer/pgbouncer.ini
+{{- end }}

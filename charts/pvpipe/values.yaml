@@ -59,6 +59,41 @@ gotenberg:
     requests:
       cpu: "100m"
       memory: "128Mi"
+# PgBouncer
+pgbouncer:
+  enabled: true  # Enabled by default for connection pooling
+  image:
+    repository: pgbouncer/pgbouncer
+    tag: 1.23.1
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+  config:
+    poolMode: transaction
+    defaultPoolSize: 25
+    maxClientConn: 100
+    maxDbConnections: 50
+    reservePoolSize: 5
+    reservePoolTimeout: 3
+    serverLifetime: 3600
+    serverIdleTimeout: 600
+    # Connection settings
+    listenPort: 5432
+    listenAddr: "*"
+    authType: md5
+    adminUsers: pgbouncer
+    statsUsers: pgbouncer
+    # Log settings
+    logConnections: 1
+    logDisconnections: 1
+    logPoolerErrors: 1
+
 # Postgres Backup
 postgresBackup:
   enabled: true

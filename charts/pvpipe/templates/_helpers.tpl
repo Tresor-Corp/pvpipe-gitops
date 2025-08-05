@@ -69,3 +69,66 @@ Selector labels
 app.kubernetes.io/name: {{ .Chart.Name }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{/*
+Transform DATABASE_URL to use PgBouncer
+This helper takes a PostgreSQL connection URL and transforms it to use PgBouncer
+*/}}
+{{- define "pvpipe.pgbouncerDatabaseUrl" -}}
+{{- if and .Values.pgbouncer .Values.pgbouncer.enabled }}
+{{- if and .Values.env .Values.env.DATABASE_URL }}
+{{- $dbUrl := .Values.env.DATABASE_URL }}
+{{- if contains "postgresql://" $dbUrl }}
+{{- $parsed := regexSplit "[@:/]+" (trimPrefix "postgresql://" $dbUrl) -1 }}
+{{- if ge (len $parsed) 5 }}
+{{- $user := index $parsed 0 }}
+{{- $password := index $parsed 1 }}
+{{- $database := index $parsed 4 }}
+{{- $pgbouncerHost := printf "%s-pgbouncer" (include "pvpipe.fullname" .) }}
+{{- printf "postgresql://%s:%s@%s:5432/%s" $user $password $pgbouncerHost $database }}
+{{- else }}
+{{- .Values.env.DATABASE_URL }}
+{{- end }}
+{{- else }}
+{{- .Values.env.DATABASE_URL }}
+{{- end }}
+{{- else }}
+{{- "" }}
+{{- end }}
+{{- else if and .Values.env .Values.env.DATABASE_URL }}
+{{- .Values.env.DATABASE_URL }}
+{{- else }}
+{{- "" }}
+{{- end }}
+{{- end }}
+
+{{/*
+Transform DATABASE_URL_READONLY to use PgBouncer
+*/}}
+{{- define "pvpipe.pgbouncerDatabaseUrlReadonly" -}}
+{{- if and .Values.pgbouncer .Values.pgbouncer.enabled }}
+{{- if and .Values.env .Values.env.DATABASE_URL_READONLY }}
+{{- $dbUrl := .Values.env.DATABASE_URL_READONLY }}
+{{- if contains "postgresql://" $dbUrl }}
+{{- $parsed := regexSplit "[@:/]+" (trimPrefix "postgresql://" $dbUrl) -1 }}
+{{- if ge (len $parsed) 5 }}
+{{- $user := index $parsed 0 }}
+{{- $password := index $parsed 1 }}
+{{- $database := index $parsed 4 }}
+{{- $pgbouncerHost := printf "%s-pgbouncer" (include "pvpipe.fullname" .) }}
+{{- printf "postgresql://%s:%s@%s:5432/%s_readonly" $user $password $pgbouncerHost $database }}
+{{- else }}
+{{- .Values.env.DATABASE_URL_READONLY }}
+{{- end }}
+{{- else }}
+{{- .Values.env.DATABASE_URL_READONLY }}
+{{- end }}
+{{- else }}
+{{- "" }}
+{{- end }}
+{{- else if and .Values.env .Values.env.DATABASE_URL_READONLY }}
+{{- .Values.env.DATABASE_URL_READONLY }}
+{{- else }}
+{{- "" }}
+{{- end }}
+{{- end }}
