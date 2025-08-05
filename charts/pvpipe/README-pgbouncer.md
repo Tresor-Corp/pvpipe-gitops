@@ -4,7 +4,7 @@ This document explains how PgBouncer is configured as a connection pooler for al
 
 ## Overview
 
-PgBouncer acts as a lightweight connection pooler between the microservices and PostgreSQL database. **PgBouncer is enabled by default** to provide better performance and resource efficiency. All database connections from the microservices go through PgBouncer, which maintains a pool of connections to the actual PostgreSQL server.
+PgBouncer acts as a lightweight connection pooler between the microservices and PostgreSQL database. **PgBouncer is enabled by default** using the production-ready Bitnami PgBouncer image to provide better performance and resource efficiency. All database connections from the microservices go through PgBouncer, which maintains a pool of connections to the actual PostgreSQL server.
 
 ## Architecture
 
@@ -18,7 +18,7 @@ Microservices → PgBouncer → PostgreSQL
 
 2. **Original URL Preservation**: The original DATABASE_URL is preserved as DATABASE_URL_ORIGINAL for PgBouncer to use when connecting to the actual PostgreSQL server.
 
-3. **Dynamic Configuration**: PgBouncer configuration is generated dynamically at startup from the DATABASE_URL, extracting host, port, username, password, and database name.
+3. **Dynamic Configuration**: The Bitnami PgBouncer image automatically configures itself from the DATABASE_URL environment variable, extracting host, port, username, password, and database name.
 
 ## Configuration
 
@@ -90,5 +90,14 @@ Useful commands:
 ## Security
 
 - PgBouncer uses MD5 authentication by default
-- Admin user is created with a default password (should be changed in production)
+- The Bitnami image handles authentication automatically from DATABASE_URL
 - All database credentials are stored in Kubernetes secrets
+- TLS/SSL connections are supported through configuration
+
+## Image Details
+
+The deployment uses the official Bitnami PgBouncer image:
+- **Image**: `bitnami/pgbouncer:1.24.0`
+- **Features**: Production-ready, security-hardened, regular updates
+- **Configuration**: Environment variable driven
+- **Documentation**: https://github.com/bitnami/containers/tree/main/bitnami/pgbouncer

@@ -63,8 +63,8 @@ gotenberg:
 pgbouncer:
   enabled: true  # Enabled by default for connection pooling
   image:
-    repository: pgbouncer/pgbouncer
-    tag: 1.23.1
+    repository: bitnami/pgbouncer
+    tag: 1.24.0
     pullPolicy: IfNotPresent
   replicas: 1
   resources:
@@ -84,8 +84,8 @@ pgbouncer:
     serverLifetime: 3600
     serverIdleTimeout: 600
     # Connection settings
-    listenPort: 5432
-    listenAddr: "*"
+    listenPort: 6432  # Bitnami PgBouncer default port
+    listenAddr: "0.0.0.0"
     authType: md5
     adminUsers: pgbouncer
     statsUsers: pgbouncer
