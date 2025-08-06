@@ -557,7 +557,22 @@ traefik:
         - retry
         - compress
         - cors
-    # MS-Settings Service
+    # MS-Settings Service - User endpoints (more specific, must come first)
+    ms-settings-user:
+      enabled: true
+      pathPrefix: /api/v1/settings/user
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-settings"
+      port: 8082
+      protected: true  # Requires forward auth
+      priority: 20  # Higher priority to match before general settings route
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # MS-Settings Service - General endpoints
     ms-settings:
       enabled: true
       pathPrefix: /api/v1/settings
@@ -565,19 +580,7 @@ traefik:
       service: "{{ .Release.Name }}-ms-settings"
       port: 8082
       protected: false  # Public endpoint for /public paths
-      middlewares:
-        - rate-limit
-        - headers
-        - retry
-        - compress
-        - cors
-    ms-settings-user:
-      enabled: true
-      pathPrefix: /v1/settings/user
-      stripPrefix: false
-      service: "{{ .Release.Name }}-ms-settings"
-      port: 8082
-      protected: true  # Requires forward auth
+      priority: 10  # Lower priority
       middlewares:
         - rate-limit
         - headers

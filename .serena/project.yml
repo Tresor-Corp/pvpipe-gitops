@@ -1,0 +1,2 @@
+project_name: pvpipe-backend-gitops
+language: go  # Setting as go since this is a GitOps repo for Go/Node.js microservices
