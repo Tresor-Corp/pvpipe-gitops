@@ -1,3 +1,6 @@
 # Ignore subchart tarballs but keep Chart.lock
 charts/**/charts/
 *.tgz
+
+# Ignore fluxcd symlink
+fluxcd

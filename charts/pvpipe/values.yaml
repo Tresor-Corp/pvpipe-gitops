@@ -571,6 +571,19 @@ traefik:
         - retry
         - compress
         - cors
+    ms-settings-user:
+      enabled: true
+      pathPrefix: /v1/settings/user
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-settings"
+      port: 8082
+      protected: true  # Requires forward auth
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
     # MS-Notifications Service
     ms-notifications:
       enabled: true
