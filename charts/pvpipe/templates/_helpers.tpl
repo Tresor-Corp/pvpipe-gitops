@@ -72,10 +72,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{/*
 Transform DATABASE_URL to use PgBouncer
-This helper takes a PostgreSQL connection URL and transforms it to use PgBouncer
+This helper takes a PostgreSQL connection URL and transforms it to use PgBouncer (mandatory)
 */}}
 {{- define "pvpipe.pgbouncerDatabaseUrl" -}}
-{{- if and .Values.pgbouncer .Values.pgbouncer.enabled }}
 {{- if and .Values.env .Values.env.DATABASE_URL }}
 {{- $dbUrl := .Values.env.DATABASE_URL }}
 {{- if contains "postgresql://" $dbUrl }}
@@ -85,28 +84,23 @@ This helper takes a PostgreSQL connection URL and transforms it to use PgBouncer
 {{- $password := index $parsed 1 }}
 {{- $database := index $parsed 4 }}
 {{- $pgbouncerHost := printf "%s-pgbouncer" (include "pvpipe.fullname" .) }}
-{{- printf "postgresql://%s:%s@%s:5432/%s" $user $password $pgbouncerHost $database }}
+{{- $pgbouncerPort := $.Values.pgbouncer.config.listenPort | default 6432 }}
+{{- printf "postgresql://%s:%s@%s:%d/%s" $user $password $pgbouncerHost $pgbouncerPort $database }}
 {{- else }}
-{{- .Values.env.DATABASE_URL }}
+{{- fail "Invalid DATABASE_URL format for PgBouncer transformation" }}
 {{- end }}
 {{- else }}
-{{- .Values.env.DATABASE_URL }}
+{{- fail "DATABASE_URL must be a PostgreSQL URL starting with postgresql://" }}
 {{- end }}
 {{- else }}
-{{- "" }}
-{{- end }}
-{{- else if and .Values.env .Values.env.DATABASE_URL }}
-{{- .Values.env.DATABASE_URL }}
-{{- else }}
-{{- "" }}
+{{- fail "DATABASE_URL is required for PgBouncer configuration" }}
 {{- end }}
 {{- end }}
 
 {{/*
-Transform DATABASE_URL_READONLY to use PgBouncer
+Transform DATABASE_URL_READONLY to use PgBouncer (mandatory)
 */}}
 {{- define "pvpipe.pgbouncerDatabaseUrlReadonly" -}}
-{{- if and .Values.pgbouncer .Values.pgbouncer.enabled }}
 {{- if and .Values.env .Values.env.DATABASE_URL_READONLY }}
 {{- $dbUrl := .Values.env.DATABASE_URL_READONLY }}
 {{- if contains "postgresql://" $dbUrl }}
@@ -116,18 +110,14 @@ Transform DATABASE_URL_READONLY to use PgBouncer
 {{- $password := index $parsed 1 }}
 {{- $database := index $parsed 4 }}
 {{- $pgbouncerHost := printf "%s-pgbouncer" (include "pvpipe.fullname" .) }}
-{{- printf "postgresql://%s:%s@%s:5432/%s_readonly" $user $password $pgbouncerHost $database }}
+{{- $pgbouncerPort := $.Values.pgbouncer.config.listenPort | default 6432 }}
+{{- printf "postgresql://%s:%s@%s:%d/%s" $user $password $pgbouncerHost $pgbouncerPort $database }}
 {{- else }}
-{{- .Values.env.DATABASE_URL_READONLY }}
+{{- fail "Invalid DATABASE_URL_READONLY format for PgBouncer transformation" }}
 {{- end }}
 {{- else }}
-{{- .Values.env.DATABASE_URL_READONLY }}
+{{- fail "DATABASE_URL_READONLY must be a PostgreSQL URL starting with postgresql://" }}
 {{- end }}
-{{- else }}
-{{- "" }}
-{{- end }}
-{{- else if and .Values.env .Values.env.DATABASE_URL_READONLY }}
-{{- .Values.env.DATABASE_URL_READONLY }}
 {{- else }}
 {{- "" }}
 {{- end }}
