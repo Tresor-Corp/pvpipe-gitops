@@ -28,16 +28,6 @@ env:
 Each microservice can be configured to use either read-write or read-only database access:
 
 ```yaml
-# MS-Toan Service
-msToan:
-  enabled: true
-  useReadOnlyDatabase: true  # Set to true for read-only access
-
-# MS-Quoc Service  
-msQuoc:
-  enabled: true
-  useReadOnlyDatabase: true  # Set to true for read-only access
-
 # Command Center Service
 commandCenter:
   enabled: true
@@ -80,6 +70,5 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO pvpipe_reado
 
 ## Example Use Cases
 
-- **ms-toan/ms-quoc**: Authentication services that only need to verify tokens (read-only)
 - **command-center**: Audit service that might only need to read data (configurable)
 - **backend**: Main application that needs full database access (read-write)
