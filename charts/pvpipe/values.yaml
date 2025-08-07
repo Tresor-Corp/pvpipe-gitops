@@ -363,17 +363,6 @@ bullboard:
 # Traefik API Gateway
 traefik:
   enabled: true
-  # Ingress configuration for Traefik dashboard
-  ingress:
-    enabled: false
-    className: nginx
-    host: traefik.tresor.vn
-    annotations:
-      cert-manager.io/cluster-issuer: cluster-issuer-tresor.vn
-      nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    tls:
-      enabled: true
-      secretName: traefik-tls-secret
   # Traefik chart values
   service:
     type: ClusterIP
