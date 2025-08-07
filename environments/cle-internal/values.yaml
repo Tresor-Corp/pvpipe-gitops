@@ -1,0 +1,14 @@
+# CLE Internal Environment Configuration
+
+# Enable Traefik ingress for dashboard access
+traefik:
+  ingress:
+    enabled: true
+    host: traefik-cle-internal.tresor.vn
+    annotations:
+      cert-manager.io/cluster-issuer: cluster-issuer-tresor.vn
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      # Optional: Add basic auth for security
+      # nginx.ingress.kubernetes.io/auth-type: basic
+      # nginx.ingress.kubernetes.io/auth-secret: traefik-dashboard-auth
+      # nginx.ingress.kubernetes.io/auth-realm: "Traefik Dashboard"

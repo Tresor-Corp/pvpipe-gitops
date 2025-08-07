@@ -1,0 +1,39 @@
+{{- if and .Values.traefik.enabled .Values.traefik.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-traefik-dashboard
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik-dashboard
+  {{- if .Values.traefik.ingress.annotations }}
+  annotations:
+    {{- toYaml .Values.traefik.ingress.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.traefik.ingress.className }}
+  ingressClassName: {{ .Values.traefik.ingress.className }}
+  {{- end }}
+  {{- if and .Values.traefik.ingress.tls .Values.traefik.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.traefik.ingress.host }}
+      {{- if .Values.traefik.ingress.tls.secretName }}
+      secretName: {{ .Values.traefik.ingress.tls.secretName }}
+      {{- else }}
+      secretName: {{ include "pvpipe.fullname" . }}-traefik-tls
+      {{- end }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.traefik.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-traefik
+                port:
+                  number: 9000  # Traefik dashboard port
+{{- end }}
