@@ -50,7 +50,10 @@ spec:
                   name: {{ .Release.Name }}-pgbouncer-secret
                   key: postgres-host
             - name: POSTGRESQL_PORT
-              value: "5432"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-pgbouncer-secret
+                  key: postgres-port
             - name: POSTGRESQL_USERNAME
               valueFrom:
                 secretKeyRef:
