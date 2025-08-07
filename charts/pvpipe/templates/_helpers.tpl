@@ -75,10 +75,10 @@ Generate DATABASE_URL for PgBouncer connection
 This helper creates a PostgreSQL URL for services to connect through PgBouncer
 */}}
 {{- define "pvpipe.pgbouncerDatabaseUrl" -}}
-{{- if and .Values.env.DATABASE_HOST .Values.env.DATABASE_NAME .Values.env.DATABASE_USER .Values.env.DATABASE_PASSWORD }}
+{{- if and .Values.env .Values.env.DATABASE_HOST .Values.env.DATABASE_NAME .Values.env.DATABASE_USER .Values.env.DATABASE_PASSWORD }}
 {{- $pgbouncerHost := printf "%s-pgbouncer" (include "pvpipe.fullname" .) }}
-{{- $pgbouncerPort := .Values.pgbouncer.config.listenPort | default 6432 }}
-{{- printf "postgresql://%s:%s@%s:%d/%s" .Values.env.DATABASE_USER .Values.env.DATABASE_PASSWORD $pgbouncerHost $pgbouncerPort .Values.env.DATABASE_NAME }}
+{{- $pgbouncerPort := .Values.pgbouncer.config.listenPort | default 6432 | toString }}
+{{- printf "postgresql://%s:%s@%s:%s/%s" .Values.env.DATABASE_USER .Values.env.DATABASE_PASSWORD $pgbouncerHost $pgbouncerPort .Values.env.DATABASE_NAME }}
 {{- else }}
 {{- fail "DATABASE_HOST, DATABASE_NAME, DATABASE_USER, and DATABASE_PASSWORD are required for PgBouncer configuration" }}
 {{- end }}
