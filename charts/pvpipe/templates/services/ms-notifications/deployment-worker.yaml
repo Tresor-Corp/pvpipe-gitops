@@ -1,0 +1,85 @@
+{{- if and .Values.msNotifications.enabled .Values.msNotifications.worker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-notifications-worker
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-notifications-worker
+  annotations:
+    keel.sh/policy: force
+    keel.sh/trigger: poll
+    keel.sh/pollSchedule: "@every 1m"
+spec:
+  replicas: {{ .Values.msNotifications.worker.replicas | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "pvpipe.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ms-notifications-worker
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/core/common-env-configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/core/secret.yaml") . | sha256sum }}
+      labels:
+        {{- include "pvpipe.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ms-notifications-worker
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ . }}
+      {{- end }}
+      securityContext:
+        fsGroup: 2000
+      containers:
+        - name: worker
+          image: "{{ .Values.msNotifications.image.repository }}:{{ .Values.msNotifications.image.tag | default .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.msNotifications.image.pullPolicy | default .Values.image.pullPolicy }}
+          # No liveness probe for worker as requested
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-common-env
+            - secretRef:
+                name: {{ .Release.Name }}-secret
+          env:
+            - name: REDIS_URL
+              value: "redis://{{ .Release.Name }}-redis:6379"
+            - name: SERVICE_NAME
+              value: "ms-notifications-worker"
+            {{- range $key, $value := .Values.msNotifications.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- range $key, $value := .Values.msNotifications.worker.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.msNotifications.worker.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

@@ -2,20 +2,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "pvpipe.fullname" . }}-ms-notifications
+  name: {{ include "pvpipe.fullname" . }}-ms-notifications-api
   labels:
     {{- include "pvpipe.labels" . | nindent 4 }}
-    app.kubernetes.io/component: ms-notifications
+    app.kubernetes.io/component: ms-notifications-api
   annotations:
     keel.sh/policy: force
     keel.sh/trigger: poll
     keel.sh/pollSchedule: "@every 1m"
 spec:
-  replicas: {{ .Values.msNotifications.replicas | default 2 }}
+  replicas: {{ .Values.msNotifications.api.replicas | default 1 }}
   selector:
     matchLabels:
       {{- include "pvpipe.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: ms-notifications
+      app.kubernetes.io/component: ms-notifications-api
   template:
     metadata:
       annotations:
@@ -23,7 +23,7 @@ spec:
         checksum/secret: {{ include (print $.Template.BasePath "/core/secret.yaml") . | sha256sum }}
       labels:
         {{- include "pvpipe.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: ms-notifications
+        app.kubernetes.io/component: ms-notifications-api
     spec:
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets:
@@ -35,10 +35,9 @@ spec:
         - name: api
           image: "{{ .Values.msNotifications.image.repository }}:{{ .Values.msNotifications.image.tag | default .Values.image.tag }}"
           imagePullPolicy: {{ .Values.msNotifications.image.pullPolicy | default .Values.image.pullPolicy }}
-          command: ["./main"]  # API server
           ports:
             - name: http
-              containerPort: {{ .Values.msNotifications.containerPort | default 8080 }}
+              containerPort: {{ .Values.msNotifications.api.containerPort | default 8080 }}
               protocol: TCP
           livenessProbe:
             httpGet:
@@ -63,9 +62,7 @@ spec:
                 name: {{ .Release.Name }}-secret
           env:
             - name: PORT
-              value: "{{ .Values.msNotifications.containerPort | default 8080 }}"
-            - name: GIN_MODE
-              value: {{ .Values.msNotifications.env.GIN_MODE | default "release" | quote }}
+              value: "{{ .Values.msNotifications.api.containerPort | default 8080 }}"
             - name: REDIS_URL
               value: "redis://{{ .Release.Name }}-redis:6379"
             - name: SERVICE_NAME
@@ -74,55 +71,12 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-          resources:
-            {{- toYaml .Values.msNotifications.api.resources | nindent 12 }}
-          securityContext:
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 1000
-            capabilities:
-              drop:
-                - ALL
-            readOnlyRootFilesystem: true
-          volumeMounts:
-            - name: tmp
-              mountPath: /tmp
-        - name: email-worker
-          image: "{{ .Values.msNotifications.image.repository }}:{{ .Values.msNotifications.image.tag | default .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.msNotifications.image.pullPolicy | default .Values.image.pullPolicy }}
-          command: ["./main", "worker"]  # Email processor
-          livenessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - "pgrep -f 'main worker' || exit 1"
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            timeoutSeconds: 5
-            failureThreshold: 3
-          envFrom:
-            - configMapRef:
-                name: {{ .Release.Name }}-common-env
-            - secretRef:
-                name: {{ .Release.Name }}-secret
-          env:
-            - name: GIN_MODE
-              value: {{ .Values.msNotifications.env.GIN_MODE | default "release" | quote }}
-            - name: REDIS_URL
-              value: "redis://{{ .Release.Name }}-redis:6379"
-            - name: SERVICE_NAME
-              value: "ms-notifications-worker"
-            - name: WORKER_CONCURRENCY
-              value: {{ .Values.msNotifications.env.WORKER_CONCURRENCY | default "10" | quote }}
-            - name: QUEUE_PRIORITIES
-              value: {{ .Values.msNotifications.env.QUEUE_PRIORITIES | default "critical:10,high:6,normal:4,low:2,bulk:1" | quote }}
-            {{- range $key, $value := .Values.msNotifications.env }}
+            {{- range $key, $value := .Values.msNotifications.api.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
           resources:
-            {{- toYaml .Values.msNotifications.worker.resources | nindent 12 }}
+            {{- toYaml .Values.msNotifications.api.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
             runAsNonRoot: true

@@ -672,11 +672,11 @@ msNotifications:
     repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-notifications
     tag: latest
     pullPolicy: Always
-  replicas: 2
-  containerPort: 8080
-  servicePort: 8080
-  # API container resources
+  # API deployment configuration
   api:
+    replicas: 1
+    containerPort: 8080
+    servicePort: 8080
     resources:
       limits:
         cpu: "500m"
@@ -684,8 +684,12 @@ msNotifications:
       requests:
         cpu: "250m"
         memory: "256Mi"
-  # Worker container resources
+    env:
+      RUN_MODE: "api"
+  # Worker deployment configuration  
   worker:
+    enabled: true
+    replicas: 1
     resources:
       limits:
         cpu: "400m"
@@ -693,6 +697,9 @@ msNotifications:
       requests:
         cpu: "200m"
         memory: "128Mi"
+    env:
+      RUN_MODE: "worker"
+  # Common environment variables
   env:
     GIN_MODE: "release"
     WORKER_CONCURRENCY: "10"
