@@ -1,0 +1,27 @@
+{{- if .Values.traefik.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-options-handler
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: options-handler
+spec:
+  entryPoints:
+    - web
+    {{- if .Values.traefik.tls.enabled }}
+    - websecure
+    {{- end }}
+  routes:
+    - match: Method(`OPTIONS`)
+      kind: Rule
+      priority: {{ .Values.traefik.optionsRoute.priority | default 150 }}
+      services:
+        - name: noop@internal
+          kind: TraefikService
+      middlewares:
+        {{- if .Values.traefik.middleware.cors.enabled }}
+        - name: {{ include "pvpipe.fullname" . }}-cors
+        {{- end }}
+{{- end }}
