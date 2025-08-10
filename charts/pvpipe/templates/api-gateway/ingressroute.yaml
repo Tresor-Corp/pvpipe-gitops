@@ -26,7 +26,9 @@ spec:
     {{- if $route.enabled }}
     - match: {{ if $route.useRegex }}PathRegexp(`{{ $route.pathPrefix }}`){{ else }}PathPrefix(`{{ $route.pathPrefix }}`){{ end }} && !Method(`OPTIONS`)
       kind: Rule
-      {{- if eq $route.pathPrefix "/" }}
+      {{- if $route.priority }}
+      priority: {{ $route.priority }}
+      {{- else if eq $route.pathPrefix "/" }}
       priority: 1
       {{- else }}
       priority: 10
