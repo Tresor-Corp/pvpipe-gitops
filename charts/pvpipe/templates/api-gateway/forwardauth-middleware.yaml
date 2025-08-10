@@ -16,4 +16,9 @@ spec:
       - X-User-Email
       - X-User-Role
       - X-User-Permissions
+    authRequestHeaders:
+      - Authorization
+      - X-Forwarded-Method
+      - X-Forwarded-Uri
+      - X-Forwarded-Host
 {{- end }}
