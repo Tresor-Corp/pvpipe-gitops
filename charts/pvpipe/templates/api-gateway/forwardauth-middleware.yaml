@@ -16,6 +16,7 @@ spec:
       - X-User-Email
       - X-User-Role
       - X-User-Permissions
+      - X-User-Is-Super-Admin
     authRequestHeaders:
       - Authorization
       - X-Forwarded-Method
