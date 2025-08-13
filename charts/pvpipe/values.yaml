@@ -515,18 +515,20 @@ traefik:
         - rate-limit
         - headers
         - retry
-    # MS-Auth Service - Specific public authentication endpoints only
+    # MS-Auth Service - All authentication endpoints
     ms-auth:
       enabled: true
-      pathPrefix: /api/auth/(login|register-otp|verify-otp|refresh-token)
-      useRegex: true  # Use regex matching for specific endpoints
-      stripPrefix: false  # Keep /api/auth prefix
+      pathPrefix: /api/v1/auth
+      stripPrefix: false  # Keep the full path
       service: "{{ .Release.Name }}-ms-auth"
       port: 8080
-      protected: false  # Public endpoints
+      protected: false  # Auth handled by service
+      priority: 25
       middlewares:
         - rate-limit
         - headers
+        - retry
+        - compress
         - cors
     # MS-Search Service
     ms-search-service:
