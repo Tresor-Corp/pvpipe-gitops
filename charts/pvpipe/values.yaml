@@ -285,8 +285,8 @@ msEmail:
     tag: develop
     pullPolicy: Always
   replicas: 1
-  containerPort: 8080
-  servicePort: 8080
+  containerPort: 8000
+  servicePort: 8000
   resources:
     limits:
       cpu: "500m"
