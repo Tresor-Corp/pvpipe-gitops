@@ -282,7 +282,7 @@ msEmail:
   enabled: true
   image:
     repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-email
-    tag: develop
+    tag: main
     pullPolicy: Always
   replicas: 1
   containerPort: 8000

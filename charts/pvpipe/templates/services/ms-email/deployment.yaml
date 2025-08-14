@@ -55,13 +55,13 @@ spec:
             {{- toYaml .Values.msEmail.resources | nindent 12 }}
           livenessProbe:
             httpGet:
-              path: /api/health
+              path: /health
               port: {{ .Values.msEmail.containerPort }}
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /api/health
+              path: /health
               port: {{ .Values.msEmail.containerPort }}
             initialDelaySeconds: 10
             periodSeconds: 5
