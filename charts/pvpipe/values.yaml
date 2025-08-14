@@ -550,7 +550,7 @@ traefik:
       pathPrefix: /api/v1/email
       stripPrefix: false
       service: "{{ .Release.Name }}-ms-email"
-      port: 8000
+      port: "{{ .Values.msEmail.servicePort }}"
       protected: true  # Requires authentication
       middlewares:
         - rate-limit
