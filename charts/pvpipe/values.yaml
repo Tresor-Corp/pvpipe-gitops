@@ -547,7 +547,7 @@ traefik:
     # MS-Email Service
     ms-email:
       enabled: true
-      pathPrefix: /ms-email
+      pathPrefix: /api/v1/email
       stripPrefix: true
       service: "{{ .Release.Name }}-ms-email"
       port: 8000
