@@ -17,7 +17,7 @@ data:
   SEARCH_SERVICE_URL: "http://{{ .Release.Name }}-ms-search-service:{{ .Values.msSearchService.servicePort }}"
   # Notifications service URL for internal calls
   {{- if .Values.msNotifications.enabled }}
-  NOTIFICATIONS_SERVICE_URL: "http://{{ .Release.Name }}-ms-notifications-api:{{ .Values.msNotifications.servicePort }}"
+  NOTIFICATIONS_SERVICE_URL: "http://{{ .Release.Name }}-ms-notifications-api:{{ .Values.msNotifications.api.servicePort }}"
   {{- end }}
   # Redis connection
   REDIS_HOST: "{{ .Release.Name }}-redis"
