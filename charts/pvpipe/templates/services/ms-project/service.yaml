@@ -1,0 +1,19 @@
+{{- if .Values.msProject.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-project
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-project
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.msProject.servicePort }}
+      targetPort: {{ .Values.msProject.containerPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "pvpipe.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-project
+{{- end }}

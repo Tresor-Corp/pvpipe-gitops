@@ -326,6 +326,25 @@ msSettings:
       memory: "128Mi"
   env: {}
 
+# MS-Project Service
+msProject:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-project
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8080
+  servicePort: 8080
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env: {}
+
 # BullBoard Queue Dashboard
 bullboard:
   enabled: true
@@ -423,10 +442,38 @@ traefik:
     annotations:
       cert-manager.io/cluster-issuer: cluster-issuer-tresor.vn
       nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
       external-dns.alpha.kubernetes.io/hostname: "ingress.tresor.vn"
     tls: []
   # Microservices routing configuration
   routes:
+    # Project routes - higher priority
+    project:
+      enabled: true
+      pathPrefix: /api/v1/project
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-project"
+      port: 8080
+      priority: 100
+      protected: false
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+    tasks:
+      enabled: true
+      pathPrefix: /api/v1/tasks
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-project"
+      port: 8080
+      priority: 100
+      protected: false
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
     # Root catch-all route
     root:
       enabled: true
@@ -550,7 +597,7 @@ traefik:
       pathPrefix: /api/v1/emails
       stripPrefix: false
       service: "{{ .Release.Name }}-ms-email"
-      port: "{{ .Values.msEmail.servicePort }}"
+      port: 8000
       protected: true  # Requires authentication
       middlewares:
         - rate-limit
