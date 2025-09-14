@@ -13,6 +13,8 @@ spec:
     trustForwardHeader: true
     authResponseHeaders:
       - X-User-Id
+      - X-Employee-Id
+      - X-Department-Id
       - X-User-Email
       - X-User-Role
       - X-User-Permissions
