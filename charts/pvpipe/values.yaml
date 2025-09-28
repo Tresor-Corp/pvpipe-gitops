@@ -652,6 +652,34 @@ traefik:
         - retry
         - compress
         - cors
+    # MS-Database Service - SQLite/libSQL API
+    ms-database-api:
+      enabled: true
+      pathPrefix: /api/v1/database
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-database"
+      port: 8080
+      protected: true  # Requires authentication
+      priority: 15
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # MS-Database Service - Web Viewer UI
+    ms-database-viewer:
+      enabled: true
+      pathPrefix: /database-viewer
+      stripPrefix: true
+      service: "{{ .Release.Name }}-ms-database"
+      port: 8090
+      protected: true  # Requires authentication
+      priority: 15
+      middlewares:
+        - rate-limit
+        - headers
+        - compress
   dashboard:
     enabled: false
   # Middleware configurations
@@ -716,6 +744,33 @@ traefik:
     domains: []
     options: ""
 
+
+# MS-Database Service (libSQL/sqld with sqlite-web viewer)
+msDatabase:
+  enabled: true
+  image:
+    repository: ms-database
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  sqldPort: 8080
+  viewerPort: 8090
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: ""  # Leave empty to use default storage class
+    accessMode: ReadWriteOnce
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env:
+    RUST_LOG: "info"
+    SQLD_PORT: "8080"
+    VIEWER_PORT: "8090"
 
 # MS-Notifications Microservice
 msNotifications:

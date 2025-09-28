@@ -1,0 +1,130 @@
+{{- if .Values.msDatabase.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-database
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-database
+spec:
+  serviceName: {{ include "pvpipe.fullname" . }}-ms-database
+  replicas: {{ .Values.msDatabase.replicas }}
+  selector:
+    matchLabels:
+      {{- include "pvpipe.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ms-database
+  template:
+    metadata:
+      labels:
+        {{- include "pvpipe.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ms-database
+    spec:
+      {{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecrets }}
+      {{- end }}
+      containers:
+      - name: ms-database
+        image: "{{ .Values.msDatabase.image.repository }}:{{ .Values.msDatabase.image.tag }}"
+        imagePullPolicy: {{ .Values.msDatabase.image.pullPolicy }}
+        ports:
+        - name: sqld
+          containerPort: {{ .Values.msDatabase.sqldPort }}
+          protocol: TCP
+        - name: viewer
+          containerPort: {{ .Values.msDatabase.viewerPort }}
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: {{ include "pvpipe.fullname" . }}-common-env
+        - configMapRef:
+            name: {{ .Release.Name }}-configmap
+            optional: true
+        - secretRef:
+            name: {{ .Release.Name }}-secret
+            optional: true
+        env:
+        - name: SQLD_PORT
+          value: "{{ .Values.msDatabase.sqldPort }}"
+        - name: VIEWER_PORT
+          value: "{{ .Values.msDatabase.viewerPort }}"
+        {{- range $key, $value := .Values.msDatabase.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        # Optional S3 backup configuration from secrets
+        - name: LIBSQL_BOTTOMLESS_BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: LIBSQL_BOTTOMLESS_BUCKET
+              optional: true
+        - name: LIBSQL_BOTTOMLESS_AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: LIBSQL_BOTTOMLESS_AWS_ACCESS_KEY_ID
+              optional: true
+        - name: LIBSQL_BOTTOMLESS_AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: LIBSQL_BOTTOMLESS_AWS_SECRET_ACCESS_KEY
+              optional: true
+        - name: LIBSQL_BOTTOMLESS_AWS_REGION
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: LIBSQL_BOTTOMLESS_AWS_REGION
+              optional: true
+        - name: LIBSQL_BOTTOMLESS_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: LIBSQL_BOTTOMLESS_ENDPOINT
+              optional: true
+        - name: SQLD_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-secret
+              key: SQLD_AUTH_TOKEN
+              optional: true
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        resources:
+          {{- toYaml .Values.msDatabase.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: sqld
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: sqld
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+  {{- if .Values.msDatabase.persistence.enabled }}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+      labels:
+        {{- include "pvpipe.labels" . | nindent 8 }}
+        app.kubernetes.io/component: ms-database
+    spec:
+      accessModes:
+        - {{ .Values.msDatabase.persistence.accessMode | default "ReadWriteOnce" }}
+      resources:
+        requests:
+          storage: {{ .Values.msDatabase.persistence.size }}
+      {{- if .Values.msDatabase.persistence.storageClass }}
+      storageClassName: {{ .Values.msDatabase.persistence.storageClass }}
+      {{- end }}
+  {{- end }}
+{{- end }}

@@ -1,0 +1,23 @@
+{{- if .Values.msDatabase.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-database
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-database
+spec:
+  type: ClusterIP
+  ports:
+  - name: sqld
+    port: {{ .Values.msDatabase.sqldPort }}
+    targetPort: sqld
+    protocol: TCP
+  - name: viewer
+    port: {{ .Values.msDatabase.viewerPort }}
+    targetPort: viewer
+    protocol: TCP
+  selector:
+    {{- include "pvpipe.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-database
+{{- end }}
