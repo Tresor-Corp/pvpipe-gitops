@@ -38,3 +38,9 @@ data:
   {{- if .Values.localsignpdf.enabled }}
   LOCALSIGNPDF_URL: "http://{{ .Release.Name }}-localsignpdf:8080"
   {{- end }}
+  # MS-Database (libSQL/sqld) connection
+  {{- if .Values.msDatabase.enabled }}
+  MS_DATABASE_URL: "http://{{ .Release.Name }}-ms-database:{{ .Values.msDatabase.sqldPort }}"
+  MS_DATABASE_VIEWER_URL: "http://{{ .Release.Name }}-ms-database:{{ .Values.msDatabase.viewerPort }}"
+  SQLD_HTTP_URL: "http://{{ .Release.Name }}-ms-database:{{ .Values.msDatabase.sqldPort }}"
+  {{- end }}
