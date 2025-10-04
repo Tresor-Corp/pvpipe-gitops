@@ -1,0 +1,68 @@
+{{- if .Values.msWorkspace.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-workspace
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-workspace
+  annotations:
+    keel.sh/policy: force
+    keel.sh/trigger: poll
+    keel.sh/pollSchedule: "@every 1m"
+    keel.sh/match-tag: "true"
+spec:
+  replicas: {{ .Values.msWorkspace.replicas }}
+  selector:
+    matchLabels:
+      {{- include "pvpipe.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ms-workspace
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.msWorkspace.image.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "pvpipe.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ms-workspace
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecrets }}
+      containers:
+        - name: {{ .Chart.Name }}-ms-workspace
+          image: "{{ .Values.msWorkspace.image.repository }}:{{ .Values.msWorkspace.image.tag }}"
+          imagePullPolicy: {{ .Values.msWorkspace.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.msWorkspace.containerPort }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "pvpipe.fullname" . }}-common-env
+            - configMapRef:
+                name: {{ .Release.Name }}-configmap
+            - secretRef:
+                name: {{ .Release.Name }}-secret
+          env:
+            - name: PORT
+              value: "{{ .Values.msWorkspace.containerPort }}"
+            {{- range $key, $value := .Values.msWorkspace.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.msWorkspace.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+{{- end }}

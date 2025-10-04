@@ -19,6 +19,10 @@ data:
   {{- if .Values.msNotifications.enabled }}
   NOTIFICATIONS_SERVICE_URL: "http://{{ .Release.Name }}-ms-notifications-api:{{ .Values.msNotifications.api.servicePort }}"
   {{- end }}
+  # Workspace service URL for internal calls
+  {{- if .Values.msWorkspace.enabled }}
+  WORKSPACE_SERVICE_URL: "http://{{ .Release.Name }}-ms-workspace:{{ .Values.msWorkspace.servicePort }}"
+  {{- end }}
   # Redis connection
   REDIS_HOST: "{{ .Release.Name }}-redis"
   REDIS_PORT: "6379"

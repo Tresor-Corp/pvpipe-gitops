@@ -345,6 +345,26 @@ msProject:
       memory: "256Mi"
   env: {}
 
+# MS-Workspace Service
+msWorkspace:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-workspace
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8080
+  servicePort: 8080
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env:
+    GIN_MODE: "release"
+
 # BullBoard Queue Dashboard
 bullboard:
   enabled: true
@@ -468,6 +488,66 @@ traefik:
       pathPrefix: /api/v1/tasks
       stripPrefix: false
       service: "{{ .Release.Name }}-ms-project"
+      port: 8080
+      priority: 100
+      protected: true  # Requires authentication via forward-auth
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # MS-Workspace routes - Library API
+    ms-workspace-library:
+      enabled: true
+      pathPrefix: /api/v1/library
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-workspace"
+      port: 8080
+      priority: 100
+      protected: true  # Requires authentication via forward-auth
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # MS-Workspace routes - Employees API
+    ms-workspace-employees:
+      enabled: true
+      pathPrefix: /api/v1/employees
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-workspace"
+      port: 8080
+      priority: 100
+      protected: true  # Requires authentication via forward-auth
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # MS-Workspace routes - Departments API
+    ms-workspace-departments:
+      enabled: true
+      pathPrefix: /api/v1/departments
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-workspace"
+      port: 8080
+      priority: 100
+      protected: true  # Requires authentication via forward-auth
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # MS-Workspace routes - Users API
+    ms-workspace-users:
+      enabled: true
+      pathPrefix: /api/v1/users
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-workspace"
       port: 8080
       priority: 100
       protected: true  # Requires authentication via forward-auth
