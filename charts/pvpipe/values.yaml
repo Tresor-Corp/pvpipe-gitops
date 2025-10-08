@@ -590,7 +590,7 @@ traefik:
     # MS-Workspace routes - Workspaces API
     ms-workspace-workspaces:
       enabled: true
-      pathPrefix: /v1/workspaces
+      pathPrefix: /api/v1/workspaces
       stripPrefix: false
       service: "{{ .Release.Name }}-ms-workspace"
       port: 8080
