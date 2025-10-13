@@ -136,7 +136,7 @@ meilisearch:
 
 # Command Center Microservice
 commandCenter:
-  enabled: true
+  enabled: false
   image:
     repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/command-center
     tag: latest
@@ -767,6 +767,19 @@ traefik:
     ms-notifications:
       enabled: true
       pathPrefix: /api/v1/notifications
+      stripPrefix: true
+      service: "{{ .Release.Name }}-ms-notifications-api"
+      port: 8080
+      protected: true  # Requires authentication
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    ms-notifications-devices:
+      enabled: true
+      pathPrefix: /api/v1/devices
       stripPrefix: true
       service: "{{ .Release.Name }}-ms-notifications-api"
       port: 8080
