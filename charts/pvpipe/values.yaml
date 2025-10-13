@@ -514,7 +514,7 @@ traefik:
         - cors
     ms-workspace-livekit-webhook:
       enabled: true
-      pathPrefix: /api/v1/webhook
+      pathPrefix: /api/v1/webhooks
       stripPrefix: false
       service: "{{ .Release.Name }}-ms-workspace"
       port: 8080
