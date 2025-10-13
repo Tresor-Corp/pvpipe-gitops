@@ -512,6 +512,20 @@ traefik:
         - retry
         - compress
         - cors
+    ms-workspace-livekit-webhook:
+      enabled: true
+      pathPrefix: /api/v1/webhook
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-workspace"
+      port: 8080
+      priority: 105
+      protected: false  # Requires authentication via forward-auth
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
     # MS-Workspace routes - Employees API
     ms-workspace-employees:
       enabled: true
