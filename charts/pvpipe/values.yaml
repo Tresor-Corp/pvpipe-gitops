@@ -444,10 +444,11 @@ traefik:
     tls: []
   # Microservices routing configuration
   routes:
-    # MS-Project routes - Projects API (plural - correct path)
-    ms-project-projects:
+    # MS-Project routes - Consolidated regex pattern for all project APIs
+    # Includes: projects, tasks
+    ms-project:
       enabled: true
-      pathPrefix: /api/v1/projects
+      pathPrefix: /api/v1/(projects|tasks)
       stripPrefix: false
       service: "{{ .Release.Name }}-ms-project"
       port: 8080
@@ -458,20 +459,7 @@ traefik:
         - headers
         - retry
         - compress
-    # MS-Project routes - Tasks API
-    ms-project-tasks:
-      enabled: true
-      pathPrefix: /api/v1/tasks
-      stripPrefix: false
-      service: "{{ .Release.Name }}-ms-project"
-      port: 8080
-      priority: 100
-      protected: true  # Requires authentication via forward-auth
-      middlewares:
-        - rate-limit
-        - headers
-        - retry
-        - compress
+        - cors
     # MS-Workspace routes - Consolidated regex pattern for all workspace APIs
     # Includes: library, employees, departments, users, meetings, recordings, workspaces, files
     ms-workspace:
@@ -698,7 +686,7 @@ traefik:
     basicAuth:
       enabled: false
     cors:
-      enabled: false
+      enabled: true
       allowMethods:
         - GET
         - POST
