@@ -698,7 +698,7 @@ traefik:
     basicAuth:
       enabled: false
     cors:
-      enabled: true
+      enabled: false
       allowMethods:
         - GET
         - POST
