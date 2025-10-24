@@ -1,0 +1,48 @@
+{{- if and .Values.msWorkspace.enabled .Values.msWorkspace.worker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-ms-workspace-worker
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ms-workspace-worker
+  annotations:
+    keel.sh/policy: force
+    keel.sh/trigger: poll
+    keel.sh/pollSchedule: "@every 1m"
+    keel.sh/match-tag: "true"
+spec:
+  replicas: {{ .Values.msWorkspace.worker.replicas | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "pvpipe.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ms-workspace-worker
+  template:
+    metadata:
+      labels:
+        {{- include "pvpipe.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ms-workspace-worker
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecrets }}
+      containers:
+        - name: ms-workspace-worker
+          image: "{{ .Values.msWorkspace.image.repository }}:{{ .Values.msWorkspace.image.tag }}"
+          imagePullPolicy: {{ .Values.msWorkspace.image.pullPolicy | default "IfNotPresent" }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "pvpipe.fullname" . }}-common-env
+            - configMapRef:
+                name: {{ .Release.Name }}-configmap
+            - secretRef:
+                name: {{ .Release.Name }}-secret
+          env:
+            {{- range $key, $value := .Values.msWorkspace.worker.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- if .Values.msWorkspace.worker.resources }}
+          resources:
+            {{- toYaml .Values.msWorkspace.worker.resources | nindent 12 }}
+          {{- end }}
+{{- end }}

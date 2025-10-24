@@ -180,44 +180,6 @@ msAuth:
   env:
     GIN_MODE: "release"
 
-# MS-Files Microservice
-msFiles:
-  enabled: true
-  # API deployment configuration
-  api:
-    image:
-      repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-files
-      tag: latest
-      pullPolicy: Always
-    replicas: 1
-    containerPort: 8080
-    servicePort: 8080
-    useReadOnlyDatabase: false
-    resources:
-      limits:
-        cpu: "500m"
-        memory: "512Mi"
-      requests:
-        cpu: "250m"
-        memory: "256Mi"
-    env: {}
-  # Worker deployment configuration
-  worker:
-    enabled: true
-    image:
-      repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-files-worker
-      tag: latest
-      pullPolicy: Always
-    replicas: 1
-    useReadOnlyDatabase: false
-    resources:
-      limits:
-        cpu: "500m"
-        memory: "512Mi"
-      requests:
-        cpu: "250m"
-        memory: "256Mi"
-    env: {}
 
 # MS-Search Worker Microservice
 msSearchWorker:
@@ -352,18 +314,33 @@ msWorkspace:
     repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-workspace
     tag: latest
     pullPolicy: Always
-  replicas: 1
-  containerPort: 8080
-  servicePort: 8080
-  resources:
-    limits:
-      cpu: "500m"
-      memory: "512Mi"
-    requests:
-      cpu: "250m"
-      memory: "256Mi"
-  env:
-    GIN_MODE: "release"
+  # API deployment configuration (handles HTTP requests)
+  api:
+    replicas: 1
+    containerPort: 8080
+    servicePort: 8080
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
+    env:
+      ROLE: "api"
+  # Worker deployment configuration (handles queue processing)
+  worker:
+    enabled: true
+    replicas: 1
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
+    env:
+      ROLE: "worker"
 
 # BullBoard Queue Dashboard
 bullboard:
@@ -481,7 +458,6 @@ traefik:
         - headers
         - retry
         - compress
-        - cors
     # MS-Project routes - Tasks API
     ms-project-tasks:
       enabled: true
@@ -496,13 +472,13 @@ traefik:
         - headers
         - retry
         - compress
-        - cors
-    # MS-Workspace routes - Library API
-    ms-workspace-library:
+    # MS-Workspace routes - Consolidated regex pattern for all workspace APIs
+    # Includes: library, employees, departments, users, meetings, recordings, workspaces, files
+    ms-workspace:
       enabled: true
-      pathPrefix: /api/v1/library
+      pathPrefix: /api/v1/(library|employees|departments|users|meetings|recordings|workspaces|files)
       stripPrefix: false
-      service: "{{ .Release.Name }}-ms-workspace"
+      service: "{{ .Release.Name }}-ms-workspace-api"
       port: 8080
       priority: 100
       protected: true  # Requires authentication via forward-auth
@@ -511,111 +487,20 @@ traefik:
         - headers
         - retry
         - compress
-        - cors
-    ms-workspace-livekit-webhook:
+    # MS-Workspace webhooks - Separate route for unprotected webhook endpoints
+    ms-workspace-webhooks:
       enabled: true
       pathPrefix: /api/v1/webhooks
       stripPrefix: false
-      service: "{{ .Release.Name }}-ms-workspace"
+      service: "{{ .Release.Name }}-ms-workspace-api"
       port: 8080
       priority: 105
-      protected: false  # Requires authentication via forward-auth
+      protected: false  # Public webhook endpoint
       middlewares:
         - rate-limit
         - headers
         - retry
         - compress
-        - cors
-    # MS-Workspace routes - Employees API
-    ms-workspace-employees:
-      enabled: true
-      pathPrefix: /api/v1/employees
-      stripPrefix: false
-      service: "{{ .Release.Name }}-ms-workspace"
-      port: 8080
-      priority: 100
-      protected: true  # Requires authentication via forward-auth
-      middlewares:
-        - rate-limit
-        - headers
-        - retry
-        - compress
-        - cors
-    # MS-Workspace routes - Departments API
-    ms-workspace-departments:
-      enabled: true
-      pathPrefix: /api/v1/departments
-      stripPrefix: false
-      service: "{{ .Release.Name }}-ms-workspace"
-      port: 8080
-      priority: 100
-      protected: true  # Requires authentication via forward-auth
-      middlewares:
-        - rate-limit
-        - headers
-        - retry
-        - compress
-        - cors
-    # MS-Workspace routes - Users API
-    ms-workspace-users:
-      enabled: true
-      pathPrefix: /api/v1/users
-      stripPrefix: false
-      service: "{{ .Release.Name }}-ms-workspace"
-      port: 8080
-      priority: 100
-      protected: true  # Requires authentication via forward-auth
-      middlewares:
-        - rate-limit
-        - headers
-        - retry
-        - compress
-        - cors
-    # MS-Workspace routes - Meetings API
-    ms-workspace-meetings:
-      enabled: true
-      pathPrefix: /api/v1/meetings
-      stripPrefix: false
-      service: "{{ .Release.Name }}-ms-workspace"
-      port: 8080
-      priority: 100
-      protected: true  # Requires authentication via forward-auth
-      middlewares:
-        - rate-limit
-        - headers
-        - retry
-        - compress
-        - cors
-    # MS-Workspace routes - Recordings API
-    ms-workspace-recordings:
-      enabled: true
-      pathPrefix: /api/v1/recordings
-      stripPrefix: false
-      service: "{{ .Release.Name }}-ms-workspace"
-      port: 8080
-      priority: 100
-      protected: true  # Requires authentication via forward-auth
-      middlewares:
-        - rate-limit
-        - headers
-        - retry
-        - compress
-        - cors
-    # MS-Workspace routes - Workspaces API
-    ms-workspace-workspaces:
-      enabled: true
-      pathPrefix: /api/v1/workspaces
-      stripPrefix: false
-      service: "{{ .Release.Name }}-ms-workspace"
-      port: 8080
-      priority: 100
-      protected: true  # Requires authentication via forward-auth
-      middlewares:
-        - rate-limit
-        - headers
-        - retry
-        - compress
-        - cors
     # Root catch-all route
     root:
       enabled: true
@@ -678,32 +563,6 @@ traefik:
         - retry
         - compress
         - cors
-    # MS-Files Service - API endpoints for file operations (CRUD, metadata, etc.)
-    ms-files-api:
-      enabled: true
-      pathPrefix: /api/v1/files
-      stripPrefix: true
-      service: "{{ .Release.Name }}-ms-files-api"
-      port: 8080
-      protected: true  # Requires JWT authentication for API operations
-      middlewares:
-        - rate-limit
-        - headers
-        - retry
-        - compress
-        - cors
-    # MS-Files Service - Direct file serving (images, downloads, static content)
-    ms-files-serve:
-      enabled: true
-      pathPrefix: /v1/files
-      stripPrefix: true
-      service: "{{ .Release.Name }}-ms-files-api"
-      port: 8080
-      protected: true  # JWT via cookie for browser file access
-      middlewares:
-        - rate-limit
-        - headers
-        - retry
     # MS-Auth Service - All authentication endpoints
     ms-auth:
       enabled: true
