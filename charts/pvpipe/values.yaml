@@ -448,6 +448,7 @@ traefik:
     # Includes: projects, tasks
     ms-project:
       enabled: true
+      useRegex: true
       pathPrefix: /api/v1/(projects|tasks)
       stripPrefix: false
       service: "{{ .Release.Name }}-ms-project"
@@ -464,6 +465,7 @@ traefik:
     # Includes: library, employees, departments, users, meetings, recordings, workspaces, files
     ms-workspace:
       enabled: true
+      useRegex: true
       pathPrefix: /api/v1/(library|employees|departments|users|meetings|recordings|workspaces|files)
       stripPrefix: false
       service: "{{ .Release.Name }}-ms-workspace-api"
