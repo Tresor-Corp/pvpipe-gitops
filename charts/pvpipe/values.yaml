@@ -477,6 +477,7 @@ traefik:
         - headers
         - retry
         - compress
+        - cors
     # MS-Workspace webhooks - Separate route for unprotected webhook endpoints
     ms-workspace-webhooks:
       enabled: true
@@ -491,6 +492,7 @@ traefik:
         - headers
         - retry
         - compress
+        - cors
     # Root catch-all route
     root:
       enabled: true
