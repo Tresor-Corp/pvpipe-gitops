@@ -107,57 +107,6 @@ postgresBackup:
     requests:
       cpu: "100m"
       memory: "128Mi"
-# Meilisearch
-meilisearch:
-  enabled: true
-  image:
-    repository: getmeili/meilisearch
-    tag: v1.11.0
-    pullPolicy: IfNotPresent
-  service:
-    type: ClusterIP
-    port: 7700
-  environment: production
-  # Master key is now read from MEILISEARCH_API_KEY environment variable
-  dbPath: /meili_data
-  persistence:
-    enabled: true
-    size: 1Gi
-    mountPath: /meili_data
-    storageClass: ""  # Leave empty to use default storage class
-  resources:
-    limits:
-      cpu: "1"
-      memory: "2Gi"
-    requests:
-      cpu: "500m"
-      memory: "1Gi"
-
-
-# Command Center Microservice
-commandCenter:
-  enabled: false
-  image:
-    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/command-center
-    tag: latest
-    pullPolicy: Always
-  replicas: 1
-  containerPort: 3000
-  servicePort: 3000
-  useReadOnlyDatabase: false
-  resources:
-    limits:
-      cpu: "500m"
-      memory: "512Mi"
-    requests:
-      cpu: "250m"
-      memory: "256Mi"
-  persistence:
-    enabled: true
-    size: 5Gi
-    storageClass: ""  # Leave empty to use default storage class
-  env:
-    GIN_MODE: "release"
 
 # MS-Auth Microservice
 msAuth:
@@ -179,65 +128,6 @@ msAuth:
       memory: "256Mi"
   env:
     GIN_MODE: "release"
-
-
-# MS-Search Worker Microservice
-msSearchWorker:
-  polling:
-    image:
-      repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-search-worker-polling
-      tag: latest
-      pullPolicy: Always
-    replicas: 1
-    useReadOnlyDatabase: false
-    resources:
-      limits:
-        cpu: "500m"
-        memory: "512Mi"
-      requests:
-        cpu: "250m"
-        memory: "256Mi"
-    env: {}
-  consume:
-    image:
-      repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-search-worker-consumer
-      tag: latest
-      pullPolicy: Always
-    replicas: 1
-    useReadOnlyDatabase: false
-    resources:
-      limits:
-        cpu: "500m"
-        memory: "512Mi"
-      requests:
-        cpu: "250m"
-        memory: "256Mi"
-    env: {}
-
-# MS-Search Service Microservice
-msSearchService:
-  enabled: true
-  image:
-    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-search-service
-    tag: latest
-    pullPolicy: Always
-  replicas: 1
-  containerPort: 8080
-  servicePort: 8080
-  resources:
-    limits:
-      cpu: "500m"
-      memory: "512Mi"
-    requests:
-      cpu: "250m"
-      memory: "256Mi"
-  env:
-    SERVER_PORT: "8080"
-    SERVER_READ_TIMEOUT: "30s"
-    SERVER_WRITE_TIMEOUT: "30s"
-    SERVER_IDLE_TIMEOUT: "120s"
-    AUTH_REALM: "Restricted"
-    LOG_LEVEL: "info"
 
 # MS-Email Microservice
 msEmail:
@@ -287,6 +177,47 @@ msSettings:
       cpu: "100m"
       memory: "128Mi"
   env: {}
+# MS-Notifications Microservice
+msNotifications:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-notifications
+    tag: latest
+    pullPolicy: Always
+  # API deployment configuration
+  api:
+    replicas: 1
+    containerPort: 8080
+    servicePort: 8080
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
+    env:
+      RUN_MODE: "api"
+  # Worker deployment configuration  
+  worker:
+    enabled: true
+    replicas: 1
+    resources:
+      limits:
+        cpu: "400m"
+        memory: "256Mi"
+      requests:
+        cpu: "200m"
+        memory: "128Mi"
+    env:
+      RUN_MODE: "worker"
+  # Common environment variables
+  env:
+    GIN_MODE: "release"
+    WORKER_CONCURRENCY: "10"
+    QUEUE_PRIORITIES: "critical:10,high:6,normal:4,low:2,bulk:1"
+
+# Environment variables
 
 # MS-Project Service
 msProject:
@@ -506,55 +437,6 @@ traefik:
         - headers
         - retry
         - compress
-    # Example microservice routes (disabled by default)
-    docs:
-      enabled: false
-      pathPrefix: /api/docs
-      stripPrefix: true
-      service: "{{ .Release.Name }}-docs"
-      port: 3000
-      protected: false  # Public documentation
-      middlewares:
-        - rate-limit
-        - headers
-        - compress
-    users:
-      enabled: false
-      pathPrefix: /api/v1/users
-      stripPrefix: true
-      service: "{{ .Release.Name }}-users"
-      port: 8080
-      protected: true  # Requires JWT authentication
-      middlewares:
-        - rate-limit
-        - headers
-        - retry
-        - compress
-    auth:
-      enabled: false
-      pathPrefix: /api/auth
-      stripPrefix: true
-      service: "{{ .Release.Name }}-auth"
-      port: 8080
-      protected: false  # Auth endpoints are public (login, register, etc.)
-      middlewares:
-        - rate-limit
-        - headers
-        - compress
-    # Command Center Audit Service
-    command-center:
-      enabled: true
-      pathPrefix: /command-center
-      stripPrefix: true
-      service: "{{ .Release.Name }}-command-center"
-      port: 3000
-      protected: false  # Protected by API key
-      middlewares:
-        - rate-limit
-        - headers
-        - retry
-        - compress
-        - cors
     # MS-Auth Service - All authentication endpoints
     ms-auth:
       enabled: true
@@ -564,20 +446,6 @@ traefik:
       port: 8080
       protected: false  # Auth handled by service
       priority: 25
-      middlewares:
-        - rate-limit
-        - headers
-        - retry
-        - compress
-        - cors
-    # MS-Search Service
-    ms-search-service:
-      enabled: true
-      pathPrefix: /api/v1/search
-      stripPrefix: false
-      service: "{{ .Release.Name }}-ms-search-service"
-      port: 8080
-      protected: true  # Requires authentication
       middlewares:
         - rate-limit
         - headers
@@ -607,21 +475,6 @@ traefik:
       port: 8082
       protected: false  # Public access
       priority: 20  # Higher priority to match first
-      middlewares:
-        - rate-limit
-        - headers
-        - retry
-        - compress
-        - cors
-    # MS-Settings Service - Protected endpoints (requires auth)
-    ms-settings:
-      enabled: true
-      pathPrefix: /api/v1/settings
-      stripPrefix: false
-      service: "{{ .Release.Name }}-ms-settings"
-      port: 8082
-      protected: true  # Requires authentication
-      priority: 10  # Lower priority, catches all other settings paths
       middlewares:
         - rate-limit
         - headers
@@ -719,46 +572,4 @@ traefik:
     domains: []
     options: ""
 
-
-# MS-Notifications Microservice
-msNotifications:
-  enabled: true
-  image:
-    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-notifications
-    tag: latest
-    pullPolicy: Always
-  # API deployment configuration
-  api:
-    replicas: 1
-    containerPort: 8080
-    servicePort: 8080
-    resources:
-      limits:
-        cpu: "500m"
-        memory: "512Mi"
-      requests:
-        cpu: "250m"
-        memory: "256Mi"
-    env:
-      RUN_MODE: "api"
-  # Worker deployment configuration  
-  worker:
-    enabled: true
-    replicas: 1
-    resources:
-      limits:
-        cpu: "400m"
-        memory: "256Mi"
-      requests:
-        cpu: "200m"
-        memory: "128Mi"
-    env:
-      RUN_MODE: "worker"
-  # Common environment variables
-  env:
-    GIN_MODE: "release"
-    WORKER_CONCURRENCY: "10"
-    QUEUE_PRIORITIES: "critical:10,high:6,normal:4,low:2,bulk:1"
-
-# Environment variables
 
