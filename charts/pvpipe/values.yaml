@@ -424,6 +424,22 @@ traefik:
         - retry
         - compress
         - cors
+    # MS-Workspace notifications - WebSocket endpoint for real-time notifications
+    ms-workspace-notifications:
+      enabled: true
+      useRegex: false  # Exact path match for WebSocket
+      pathPrefix: /api/v1/notifications/ws
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-workspace-api"
+      port: 8080
+      priority: 110  # Higher priority than webhooks and main routes
+      protected: true  # Requires authentication via forward-auth
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
     # Root catch-all route
     root:
       enabled: true
