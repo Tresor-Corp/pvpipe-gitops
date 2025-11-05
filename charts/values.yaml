@@ -1,18 +1,15 @@
 # Main application
+backend:
+  enabled: true
+
 replicaCount: 1
+
 image:
   repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/pvpipe-backend
-  tag: latest
+  tag: develop
   pullPolicy: Always
-
-# Ingress
-ingress:
-  enabled: true
-  hosts:
-    - host: backend.pvpipe.tresor.vn
-      paths:
-        - path: /
-          pathType: Prefix
+  pullSecrets: aws-registry
+  annotations: {}
 
 # Redis
 redis:
@@ -22,7 +19,6 @@ redis:
     tag: alpine
   storage:
     size: 500M
-    storageClassName: longhorn
 
 # VNPTSignPDF
 vnptsignpdf:
@@ -63,6 +59,41 @@ gotenberg:
     requests:
       cpu: "100m"
       memory: "128Mi"
+# PgBouncer
+pgbouncer:
+  enabled: true  # Enabled by default for connection pooling
+  image:
+    repository: bitnami/pgbouncer
+    tag: 1.24.0
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+  config:
+    poolMode: transaction
+    defaultPoolSize: 25
+    maxClientConn: 100
+    maxDbConnections: 50
+    reservePoolSize: 5
+    reservePoolTimeout: 3
+    serverLifetime: 3600
+    serverIdleTimeout: 600
+    # Connection settings
+    listenPort: 6432  # Bitnami PgBouncer default port
+    listenAddr: "0.0.0.0"
+    authType: md5
+    adminUsers: pgbouncer
+    statsUsers: pgbouncer
+    # Log settings
+    logConnections: 1
+    logDisconnections: 1
+    logPoolerErrors: 1
+
 # Postgres Backup
 postgresBackup:
   enabled: true
@@ -77,36 +108,402 @@ postgresBackup:
       cpu: "100m"
       memory: "128Mi"
 
+# MS-Auth Microservice
+msAuth:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-auth
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8080
+  servicePort: 8080
+  useReadOnlyDatabase: false
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env:
+    GIN_MODE: "release"
+
+# MS-Email Microservice
+msEmail:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-email
+    tag: main
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8000
+  servicePort: 8000
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env: {}
+
+# MS-Settings Microservice
+msSettings:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-settings
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8082
+  servicePort: 8082
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env:
+    NODE_ENV: "production"
+    REDIS_PREFIX: "settings:"
+
+  resources:
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+  env: {}
+
 # Environment variables
-env:
-  NODE_ENV: production
-  PORT: "8000"
-  FRONTEND_URL: "http://localhost:3000"
-  JWT_SECRET: "jwt_secret"
-  COOKIE_SECRET: "cookie_secret"
-  ALLOWED_ORIGINS: "http://localhost:3000"
-  DATABASE_URL: "postgresql://myuser:password123@external-postgres:5432/mydb?schema=public"
-  SMTP_CONNECTION_URL: "smtp://email@example.com:pass@smtp-server:1025"
-  MAIL_FROM: "pvpipe <noreply@example.com>"
-  S3_PROVIDER: ""
-  S3_ACCESS_KEY_ID: ""
-  S3_SECRET_ACCESS_KEY: ""
-  S3_BUCKET_NAME: ""
-  S3_REGION: ""
-  S3_ENDPOINT: "http://external-s3:9000"
-  BACKUP_S3_PREFIX: ""
-  SENTRY_DSN: ""
-  SENTRY_TRACES_SAMPLE_RATE: "1.0"
-  REDIS_HOST: "{{ .Release.Name }}-redis"
-  REDIS_PORT: "6379"
-  SMARTCA_BASE_URL: "https://rmgateway.vnptit.vn"
-  SMARTCA_CLIENT_ID: "xxxx-xxxxxxxxxxxxxxxxxx.apps.smartcaapi.com"
-  SMARTCA_CLIENT_SECRET: "xxxxxxxxxxx-xxxxxxxxxxxx"
-  SMARTCA_USER_ID: "xxxxxxxxxxxx"
-  SMARTCA_USER_PASSWORD: "xxxxxxxxxxxx"
-  SMARTCA_TOTP_SECRET: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  LOCAL_SIGN_API: "http://{{ .Release.Name }}-localsignpdf:8000"
-  LOCAL_CERT_PASSWORD: "sa@123"
-  LOCAL_PKCS7_CERT_BASE64: ""
-  VNPT_LOCAL_SIGN_API: "http://{{ .Release.Name }}-vnptsignpdf:8000"
-  GOTENBERG_URL: "http://{{ .Release.Name }}-gotenberg:3000"
+
+# MS-Project Service
+msProject:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-project
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 8080
+  servicePort: 8080
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  env: {}
+
+# MS-Workspace Service
+msWorkspace:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/ms-workspace
+    tag: latest
+    pullPolicy: Always
+  # API deployment configuration (handles HTTP requests)
+  api:
+    replicas: 1
+    containerPort: 8080
+    servicePort: 8080
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
+    env:
+      ROLE: "api"
+  # Worker deployment configuration (handles queue processing)
+  worker:
+    enabled: true
+    replicas: 1
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
+    env:
+      ROLE: "worker"
+
+# BullBoard Queue Dashboard
+bullboard:
+  enabled: true
+  image:
+    repository: 533267304975.dkr.ecr.ap-southeast-1.amazonaws.com/tresor/tresor-bullboard
+    tag: latest
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 3000
+  servicePort: 3000
+  resources:
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+  env: {}
+  # Ingress configuration
+  ingress:
+    enabled: true
+    className: nginx
+    host: bullboard.tresor.vn
+    # Basic auth users in htpasswd format
+    # Default: admin:admin - CHANGE IN PRODUCTION!
+    # Generate with: htpasswd -n username
+    authUsers: ""  # Leave empty to use default admin:admin
+    annotations:
+      cert-manager.io/cluster-issuer: cluster-issuer-tresor.vn
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/auth-type: basic
+      nginx.ingress.kubernetes.io/auth-secret: "{{ .Release.Name }}-bullboard-auth"
+      nginx.ingress.kubernetes.io/auth-realm: "BullBoard Authentication Required"
+
+# Traefik API Gateway
+traefik:
+  enabled: true
+  # Traefik chart values
+  service:
+    type: ClusterIP
+  ports:
+    web:
+      port: 8000
+      expose:
+        default: true
+      exposedPort: 80
+      protocol: TCP
+    traefik:
+      port: 9000
+      expose:
+        default: true  # Must be true to create the service port
+      exposedPort: 9000
+      protocol: TCP
+  ingressRoute:
+    dashboard:
+      enabled: false  # Disabled to prevent /api path conflict with backend
+  globalArguments: []
+  additionalArguments:
+    - "--providers.kubernetescrd.namespaces=$(POD_NAMESPACE)"
+    - "--providers.kubernetescrd.allowCrossNamespace=false"
+    - "--api.dashboard=true"
+    - "--api.insecure=true"  # API is now safe on separate port 9000
+    - "--log.level=DEBUG"
+    - "--accesslog=true"
+    - "--accesslog.fields.defaultmode=keep"
+    - "--accesslog.fields.headers.defaultmode=keep"
+  rbac:
+    enabled: true
+    namespaced: true
+  deployment:
+    podAnnotations:
+      "namespace-isolation": "true"
+  providers:
+    kubernetesCRD:
+      enabled: true
+      allowCrossNamespace: false
+      namespaces: []  # Empty array forces current namespace only
+    kubernetesIngress:
+      enabled: false
+  logs:
+    general:
+      level: INFO
+    access:
+      enabled: true
+  metrics:
+    prometheus:
+      enabled: true
+  # API Gateway configuration
+  apiGateway:
+    host: api.tresor.vn
+  # Ingress configuration for API Gateway
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: cluster-issuer-tresor.vn
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      external-dns.alpha.kubernetes.io/hostname: "ingress.tresor.vn"
+    tls: []
+  # Microservices routing configuration
+  routes:
+    # MS-Project routes - Consolidated regex pattern for all project APIs
+    # Includes: projects, tasks
+    ms-project:
+      enabled: true
+      useRegex: true
+      pathPrefix: /api/v1/(projects|tasks)
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-project"
+      port: 8080
+      priority: 100
+      protected: true  # Requires authentication via forward-auth
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # MS-Workspace routes - Consolidated regex pattern for all workspace APIs
+    # Includes: library, employees, departments, users, meetings, recordings, workspaces, files, notifications, devices
+    ms-workspace:
+      enabled: true
+      useRegex: true
+      pathPrefix: /api/v1/(library|employees|departments|users|meetings|recordings|workspaces|files|notifications|devices)
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-workspace-api"
+      port: 8080
+      priority: 100
+      protected: true  # Requires authentication via forward-auth
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # MS-Workspace webhooks - Separate route for unprotected webhook endpoints
+    ms-workspace-webhooks:
+      enabled: true
+      pathPrefix: /api/v1/webhooks
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-workspace-api"
+      port: 8080
+      priority: 105
+      protected: false  # Public webhook endpoint
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # Root catch-all route
+    root:
+      enabled: true
+      pathPrefix: /
+      stripPrefix: false
+      service: "{{ .Release.Name }}-backend"
+      port: 8000
+      protected: false
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+    # MS-Auth Service - All authentication endpoints
+    ms-auth:
+      enabled: true
+      pathPrefix: /api/v1/auth
+      stripPrefix: false  # Keep the full path
+      service: "{{ .Release.Name }}-ms-auth"
+      port: 8080
+      protected: false  # Auth handled by service
+      priority: 25
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # MS-Email Service
+    ms-email:
+      enabled: true
+      pathPrefix: /api/v1/emails
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-email"
+      port: 8000
+      protected: true  # Requires authentication
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+    # MS-Settings Service - Public endpoints (no auth)
+    ms-settings-public:
+      enabled: true
+      pathPrefix: /api/v1/settings/public
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-settings"
+      port: 8082
+      protected: false  # Public access
+      priority: 20  # Higher priority to match first
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
+  dashboard:
+    enabled: false
+  # Middleware configurations
+  middleware:
+    rateLimit:
+      enabled: true
+      average: 100
+      period: 1m
+      burst: 50
+    headers:
+      enabled: true
+      stsSeconds: 31536000
+      stsIncludeSubdomains: true
+      stsPreload: true
+      forceSTSHeader: true
+      contentTypeNosniff: true
+      browserXssFilter: true
+      customRequestHeaders:
+        X-Forwarded-Proto: https
+      customResponseHeaders:
+        X-Content-Type-Options: nosniff
+        X-Frame-Options: DENY
+        X-XSS-Protection: 1; mode=block
+    retry:
+      enabled: true
+      attempts: 3
+      initialInterval: 100ms
+    circuitBreaker:
+      enabled: true
+      expression: "NetworkErrorRatio() > 0.30 || ResponseCodeRatio(500, 600, 0, 600) > 0.50"
+    compress:
+      enabled: true
+    basicAuth:
+      enabled: false
+    cors:
+      enabled: true
+      allowMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+        - PATCH
+      allowHeaders:
+        - Content-Type
+        - Authorization
+        - X-Requested-With
+      allowOrigins:
+        - "*"
+      maxAge: 3600
+      addVaryHeader: true
+    forwardAuth:
+      enabled: true
+  # OPTIONS route configuration (mandatory)
+  optionsRoute:
+    enabled: true
+    priority: 150
+  # TLS configuration for HTTPS
+  tls:
+    enabled: false
+    secretName: ""
+    domains: []
+    options: ""
+
+
