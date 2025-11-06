@@ -15,9 +15,9 @@ data:
   AUTH_SERVICE_URL: "http://{{ .Release.Name }}-ms-auth:{{ .Values.msAuth.servicePort }}"
   # Search service URL for internal calls
   SEARCH_SERVICE_URL: "http://{{ .Release.Name }}-ms-search-service:{{ .Values.msSearchService.servicePort }}"
-  # Notifications service URL for internal calls
-  {{- if .Values.msNotifications.enabled }}
-  NOTIFICATIONS_SERVICE_URL: "http://{{ .Release.Name }}-ms-notifications-api:{{ .Values.msNotifications.api.servicePort }}"
+  # Notifications service URL for internal calls (now handled by ms-workspace)
+  {{- if .Values.msWorkspace.enabled }}
+  NOTIFICATIONS_SERVICE_URL: "http://{{ .Release.Name }}-ms-workspace-api:{{ .Values.msWorkspace.api.servicePort }}"
   {{- end }}
   # Workspace service URL for internal calls
   {{- if .Values.msWorkspace.enabled }}
