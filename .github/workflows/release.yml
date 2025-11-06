@@ -30,7 +30,7 @@ jobs:
         run: |
           helm repo add traefik https://traefik.github.io/charts
           helm repo update
-          cd charts/pvpipe
+          cd charts
           helm dependency build
 
       - name: Run chart-releaser

@@ -40,7 +40,7 @@ PVPipe is an enterprise document management and pipeline system with a microserv
 
 3. **Deploy using Helm**:
    ```bash
-   helm install pvpipe ./charts/pvpipe -f values-production.yaml
+   helm install pvpipe ./charts -f values-production.yaml
    ```
 
 ## PgBouncer Connection Pooling
@@ -51,7 +51,7 @@ PgBouncer is **enabled by default** to provide:
 - Automatic connection pooling for all services
 - Support for both read-write and read-only connections
 
-See [README-pgbouncer.md](charts/pvpipe/README-pgbouncer.md) for detailed configuration.
+See [README-pgbouncer.md](charts/README-pgbouncer.md) for detailed configuration.
 
 ## Database Access Control
 
@@ -59,13 +59,13 @@ The system supports dual database access modes with automatic routing through Pg
 - Read-Write access for services that need full database access
 - Read-Only access for services that only need to query data
 
-See [README-database-access.md](charts/pvpipe/README-database-access.md) for configuration details.
+See [README-database-access.md](charts/README-database-access.md) for configuration details.
 
 ## Documentation
 
-- [PgBouncer Configuration](charts/pvpipe/README-pgbouncer.md)
-- [Database Access Control](charts/pvpipe/README-database-access.md)
-- [JWT Authentication](charts/pvpipe/README-jwt-authentication.md)
+- [PgBouncer Configuration](charts/README-pgbouncer.md)
+- [Database Access Control](charts/README-database-access.md)
+- [JWT Authentication](charts/README-jwt-authentication.md)
 
 ## Requirements
 

@@ -316,7 +316,7 @@ kubectl get networkpolicy -n pvpipe-system
 
 ```bash
 # Deploy to staging first
-helm upgrade --install pvpipe-staging ./charts/pvpipe \
+helm upgrade --install pvpipe-staging ./charts \
   --namespace pvpipe-staging \
   --values values-staging.yaml \
   --values values-options-bypass.yaml \
@@ -326,7 +326,7 @@ helm upgrade --install pvpipe-staging ./charts/pvpipe \
 less deployment-preview.yaml
 
 # Apply staging deployment
-helm upgrade --install pvpipe-staging ./charts/pvpipe \
+helm upgrade --install pvpipe-staging ./charts \
   --namespace pvpipe-staging \
   --values values-staging.yaml \
   --values values-options-bypass.yaml
@@ -362,7 +362,7 @@ done
 
 ```bash
 # Production deployment with canary approach
-helm upgrade pvpipe ./charts/pvpipe \
+helm upgrade pvpipe ./charts \
   --namespace pvpipe-production \
   --values values-production.yaml \
   --values values-options-bypass-production.yaml \
@@ -370,14 +370,14 @@ helm upgrade pvpipe ./charts/pvpipe \
   --set traefik.optionsRoute.canary.weight=10
 
 # Monitor for 15 minutes, then increase traffic
-helm upgrade pvpipe ./charts/pvpipe \
+helm upgrade pvpipe ./charts \
   --namespace pvpipe-production \
   --values values-production.yaml \
   --values values-options-bypass-production.yaml \
   --set traefik.optionsRoute.canary.weight=50
 
 # Full rollout after validation
-helm upgrade pvpipe ./charts/pvpipe \
+helm upgrade pvpipe ./charts \
   --namespace pvpipe-production \
   --values values-production.yaml \
   --values values-options-bypass-production.yaml \
@@ -551,7 +551,7 @@ kubectl get ingressroute -o custom-columns=NAME:.metadata.name,PRIORITY:.spec.ro
 **Solution:**
 ```bash
 # Ensure OPTIONS route has higher priority than catch-all routes
-helm upgrade pvpipe ./charts/pvpipe \
+helm upgrade pvpipe ./charts \
   --set traefik.optionsRoute.priority=150 \
   --set traefik.routes.root.priority=1
 ```
@@ -584,7 +584,7 @@ kubectl scale deployment cors-handler --replicas=3 -n pvpipe-system
 kubectl describe pod -l app.kubernetes.io/component=cors-handler -n pvpipe-system
 
 # Adjust resource limits if needed
-helm upgrade pvpipe ./charts/pvpipe \
+helm upgrade pvpipe ./charts \
   --set services.corsHandler.resources.limits.memory=128Mi \
   --set services.corsHandler.resources.limits.cpu=200m
 ```
@@ -609,12 +609,12 @@ kubectl logs -l app.kubernetes.io/name=traefik -n pvpipe-system | grep "rate lim
 **Solution:**
 ```bash
 # Increase rate limits temporarily
-helm upgrade pvpipe ./charts/pvpipe \
+helm upgrade pvpipe ./charts \
   --set traefik.middleware.optionsRateLimit.enhanced.average=1800 \
   --set traefik.middleware.optionsRateLimit.enhanced.burst=450
 
 # Add trusted IP ranges for internal traffic
-helm upgrade pvpipe ./charts/pvpipe \
+helm upgrade pvpipe ./charts \
   --set traefik.middleware.optionsRateLimit.enhanced.trustedIPs[0]="10.0.0.0/8" \
   --set traefik.middleware.optionsRateLimit.enhanced.trustedIPs[1]="172.16.0.0/12"
 ```
@@ -640,11 +640,11 @@ curl -X OPTIONS https://your-domain.com/api/test \
 **Solution:**
 ```bash
 # Add missing origins to allowlist
-helm upgrade pvpipe ./charts/pvpipe \
+helm upgrade pvpipe ./charts \
   --set traefik.middleware.cors.enhanced.allowOrigins[0]="https://new-origin.com"
 
 # For development, enable regex-based origins
-helm upgrade pvpipe ./charts/pvpipe \
+helm upgrade pvpipe ./charts \
   --set traefik.middleware.cors.enhanced.strictOrigins=false \
   --set traefik.middleware.cors.enhanced.allowOriginRegex[0]="^https?://.*\\.dev\\.local$"
 ```
@@ -665,7 +665,7 @@ kubectl exec -n pvpipe-system deployment/cors-handler -- top -n 1
 **Solution:**
 ```bash
 # Increase CPU limits and add more replicas
-helm upgrade pvpipe ./charts/pvpipe \
+helm upgrade pvpipe ./charts \
   --set services.corsHandler.replicas=4 \
   --set services.corsHandler.resources.limits.cpu=300m \
   --set services.corsHandler.resources.requests.cpu=150m
@@ -686,7 +686,7 @@ kubectl describe pod -l app.kubernetes.io/component=cors-handler -n pvpipe-syste
 **Solution:**
 ```bash
 # Increase memory limits and enable restarts
-helm upgrade pvpipe ./charts/pvpipe \
+helm upgrade pvpipe ./charts \
   --set services.corsHandler.resources.limits.memory=256Mi \
   --set services.corsHandler.restartPolicy.enabled=true \
   --set services.corsHandler.restartPolicy.memoryThreshold=200Mi
@@ -746,7 +746,7 @@ helm upgrade pvpipe ./charts/pvpipe \
    EOF
    
    # Deploy to staging
-   helm upgrade pvpipe-staging ./charts/pvpipe \
+   helm upgrade pvpipe-staging ./charts \
      --namespace pvpipe-staging \
      --values values-staging.yaml
    ```
@@ -765,7 +765,7 @@ helm upgrade pvpipe ./charts/pvpipe \
 1. **Canary Deployment**
    ```bash
    # Deploy with 10% traffic to OPTIONS bypass
-   helm upgrade pvpipe ./charts/pvpipe \
+   helm upgrade pvpipe ./charts \
      --namespace pvpipe-production \
      --values values-production.yaml \
      --set traefik.optionsRoute.enabled=true \
@@ -787,13 +787,13 @@ helm upgrade pvpipe ./charts/pvpipe \
 1. **Gradual Traffic Increase**
    ```bash
    # Increase to 50%
-   helm upgrade pvpipe ./charts/pvpipe \
+   helm upgrade pvpipe ./charts \
      --set traefik.optionsRoute.canary.weight=50
    
    # Wait 4 hours, monitor metrics
    
    # Full rollout
-   helm upgrade pvpipe ./charts/pvpipe \
+   helm upgrade pvpipe ./charts \
      --set traefik.optionsRoute.canary.enabled=false
    ```
 
@@ -824,16 +824,16 @@ kubectl logs -l app.kubernetes.io/name=traefik -n pvpipe-system --tail=50
 
 ```bash
 # Disable OPTIONS bypass gradually
-helm upgrade pvpipe ./charts/pvpipe \
+helm upgrade pvpipe ./charts \
   --set traefik.optionsRoute.canary.enabled=true \
   --set traefik.optionsRoute.canary.weight=50
 
 # Continue reducing traffic
-helm upgrade pvpipe ./charts/pvpipe \
+helm upgrade pvpipe ./charts \
   --set traefik.optionsRoute.canary.weight=10
 
 # Full disable
-helm upgrade pvpipe ./charts/pvpipe \
+helm upgrade pvpipe ./charts \
   --set traefik.optionsRoute.enabled=false
 ```
 
