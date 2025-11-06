@@ -384,6 +384,22 @@ traefik:
         - retry
         - compress
         - cors
+    # MS-Workspace GraphQL - GraphQL API endpoint
+    ms-workspace-graphql:
+      enabled: true
+      useRegex: false
+      pathPrefix: /graphql
+      stripPrefix: false
+      service: "{{ .Release.Name }}-ms-workspace-api"
+      port: 8080
+      priority: 110
+      protected: true  # Requires authentication via forward-auth
+      middlewares:
+        - rate-limit
+        - headers
+        - retry
+        - compress
+        - cors
     # MS-Workspace notifications - WebSocket endpoint for real-time notifications
     ms-workspace-notifications:
       enabled: true
