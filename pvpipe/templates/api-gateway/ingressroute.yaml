@@ -1,0 +1,67 @@
+{{- if .Values.traefik.enabled }}
+---
+# Enhanced API Gateway IngressRoute with integrated OPTIONS bypass
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "pvpipe.fullname" . }}-api-gateway
+  labels:
+    {{- include "pvpipe.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api-gateway
+  annotations:
+    # Security annotations documenting the integrated OPTIONS handling
+    security.pvpipe.io/purpose: "Main API Gateway with integrated CORS preflight bypass"
+    security.pvpipe.io/options-handling: "integrated-enhanced"
+    security.pvpipe.io/review-date: "2025-08-02"
+spec:
+  entryPoints:
+    - web
+    {{- if .Values.traefik.tls.enabled }}
+    - websecure
+    {{- end }}
+  routes:
+
+    # Standard non-OPTIONS routes (existing configuration)
+    {{- range $name, $route := .Values.traefik.routes }}
+    {{- if $route.enabled }}
+    - match: {{ if $route.useRegex }}PathRegexp(`{{ $route.pathPrefix }}`){{ else }}PathPrefix(`{{ $route.pathPrefix }}`){{ end }} && !Method(`OPTIONS`)
+      kind: Rule
+      {{- if $route.priority }}
+      priority: {{ $route.priority }}
+      {{- else if eq $route.pathPrefix "/" }}
+      priority: 1
+      {{- else }}
+      priority: 10
+      {{- end }}
+      services:
+        - name: {{ tpl $route.service $ }}
+          port: {{ $route.port }}
+      {{- if or $route.middlewares (and $route.protected $.Values.traefik.middleware.forwardAuth.enabled) }}
+      middlewares:
+        {{- if and $route.protected $.Values.traefik.middleware.forwardAuth.enabled }}
+        - name: {{ include "pvpipe.fullname" $ }}-forward-auth
+        {{- end }}
+        {{- if $route.middlewares }}
+        {{- range $route.middlewares }}
+        - name: {{ include "pvpipe.fullname" $ }}-{{ . }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+
+  {{- if .Values.traefik.tls.enabled }}
+  tls:
+    {{- if .Values.traefik.tls.secretName }}
+    secretName: {{ .Values.traefik.tls.secretName }}
+    {{- end }}
+    {{- if .Values.traefik.tls.domains }}
+    domains:
+      {{- toYaml .Values.traefik.tls.domains | nindent 6 }}
+    {{- end }}
+    {{- if .Values.traefik.tls.options }}
+    options:
+      name: {{ .Values.traefik.tls.options }}
+    {{- end }}
+  {{- end }}
+{{- end }}
