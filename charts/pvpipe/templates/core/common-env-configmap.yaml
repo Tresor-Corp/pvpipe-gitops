@@ -24,12 +24,6 @@ data:
   # Redis connection
   REDIS_HOST: "{{ .Release.Name }}-redis"
   REDIS_PORT: "6379"
-  # Meilisearch connection
-  {{- if .Values.meilisearch.enabled }}
-  MEILISEARCH_HOST: "{{ .Release.Name }}-meilisearch"
-  MEILISEARCH_PORT: "{{ .Values.meilisearch.service.port }}"
-  MEILISEARCH_URL: "http://{{ .Release.Name }}-meilisearch:{{ .Values.meilisearch.service.port }}"
-  {{- end }}
   # Other common services
   {{- if .Values.gotenberg.enabled }}
   GOTENBERG_URL: "http://{{ .Release.Name }}-gotenberg:3000"
