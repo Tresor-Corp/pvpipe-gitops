@@ -12,14 +12,16 @@ data:
   PGBOUNCER_PORT: "5432"
   {{- end }}
   # Authentication service URL for internal calls
+  {{- if .Values.msAuth.enabled }}
   AUTH_SERVICE_URL: "http://{{ .Release.Name }}-ms-auth:{{ .Values.msAuth.servicePort }}"
+  {{- end }}
   # Notifications service URL for internal calls (now handled by ms-workspace)
   {{- if .Values.msWorkspace.enabled }}
   NOTIFICATIONS_SERVICE_URL: "http://{{ .Release.Name }}-ms-workspace-api:{{ .Values.msWorkspace.api.servicePort }}"
   {{- end }}
   # Workspace service URL for internal calls
   {{- if .Values.msWorkspace.enabled }}
-  WORKSPACE_SERVICE_URL: "http://{{ .Release.Name }}-ms-workspace:{{ .Values.msWorkspace.servicePort }}"
+  WORKSPACE_SERVICE_URL: "http://{{ .Release.Name }}-ms-workspace-api:{{ .Values.msWorkspace.api.servicePort }}"
   {{- end }}
   # Redis connection
   REDIS_HOST: "{{ .Release.Name }}-redis"
