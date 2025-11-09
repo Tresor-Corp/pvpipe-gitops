@@ -24,4 +24,5 @@ spec:
       - X-Forwarded-Method
       - X-Forwarded-Uri
       - X-Forwarded-Host
+      - Sec-WebSocket-Protocol
 {{- end }}
