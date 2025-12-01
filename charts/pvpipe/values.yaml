@@ -353,11 +353,11 @@ traefik:
         - compress
         - cors
     # MS-Workspace routes - Consolidated regex pattern for all workspace APIs
-    # Includes: library, employees, departments, users, meetings, recordings, workspaces, files, notifications, devices
+    # Includes: library, employees, departments, users, meetings, recordings, workspaces, files, notifications, devices, settings
     ms-workspace:
       enabled: true
       useRegex: true
-      pathPrefix: /api/v1/(library|employees|departments|users|meetings|recordings|workspaces|files|notifications|devices)
+      pathPrefix: /api/v1/(library|employees|departments|users|meetings|recordings|workspaces|files|notifications|devices|settings)
       stripPrefix: false
       service: "{{ .Release.Name }}-ms-workspace-api"
       port: 8080
@@ -463,10 +463,10 @@ traefik:
       enabled: true
       pathPrefix: /api/v1/settings/public
       stripPrefix: false
-      service: "{{ .Release.Name }}-ms-settings"
-      port: 8082
+      service: "{{ .Release.Name }}-ms-workspace-api"
+      port: 8080
       protected: false  # Public access
-      priority: 20  # Higher priority to match first
+      priority: 110  # Higher priority than ms-workspace to match first
       middlewares:
         - rate-limit
         - headers
